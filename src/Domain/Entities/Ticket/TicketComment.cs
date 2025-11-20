@@ -14,5 +14,5 @@ public class TicketComment : BaseEntity
     public required int TicketId { get; set; }
     public Ticket? Ticket { get; set; }
 
-    public bool Edited { get; set; } = false;
+    public bool Edited { get; set; }
 }
