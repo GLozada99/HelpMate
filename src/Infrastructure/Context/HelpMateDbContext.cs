@@ -15,6 +15,7 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<TicketComment> TicketComments { get; set; }
     public DbSet<Tag> Tags { get; set; }
+    public DbSet<TicketHistory> TicketHistories { get; set; }
 
     public override int SaveChanges()
     {
@@ -84,9 +85,9 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Ticket>()
-            .HasOne(t => t.Assigned)
+            .HasOne(t => t.Assignee)
             .WithMany(u => u.AssignedTickets)
-            .HasForeignKey(t => t.AssignedId)
+            .HasForeignKey(t => t.AssigneeId)
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Ticket>()

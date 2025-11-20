@@ -37,9 +37,9 @@ public class Ticket : BaseEntity
     public required int ReporterId { get; set; }
     public User.User? Reporter { get; set; }
 
-    [ForeignKey("Assigned")]
-    public int? AssignedId { get; set; }
-    public User.User? Assigned { get; set; }
+    [ForeignKey("Assignee")]
+    public int? AssigneeId { get; set; }
+    public User.User? Assignee { get; set; }
 
     [ForeignKey("Board")]
     public required int BoardId { get; set; }
@@ -51,4 +51,5 @@ public class Ticket : BaseEntity
 
     public List<Tag> Tags { get; } = [];
     public List<User.User> Watchers { get; } = [];
+    public List<TicketHistory> History { get; } = [];
 }
