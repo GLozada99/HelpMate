@@ -75,8 +75,12 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
             .HasConversion<string>();
 
         modelBuilder.Entity<BoardMembership>()
-            .Property(o => o.Roles)
-            .HasConversion<string>();
+            .Property(b => b.Roles)
+            .HasConversion(
+                v => v.Select(r => r.ToString()).ToArray(),
+                v => v.Select(Enum.Parse<BoardMembership.MembershipRoles>).ToList()
+            )
+            .HasColumnType("text[]");
 
         modelBuilder.Entity<Ticket>()
             .HasOne(t => t.CreatedBy)
