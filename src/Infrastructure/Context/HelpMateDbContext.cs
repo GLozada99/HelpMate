@@ -12,6 +12,8 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
     public DbSet<User> Users { get; set; }
     public DbSet<Board> Boards { get; set; }
     public DbSet<BoardMembership> BoardMemberships { get; set; }
+    public DbSet<Ticket> Tickets { get; set; }
+    public DbSet<TicketComment> TicketComments { get; set; }
 
     public override int SaveChanges()
     {
