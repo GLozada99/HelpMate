@@ -1,5 +1,6 @@
 using Domain.Entities;
 using Domain.Entities.Board;
+using Domain.Entities.Ticket;
 using Domain.Entities.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -72,5 +73,23 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
         modelBuilder.Entity<BoardMembership>()
             .Property(o => o.Roles)
             .HasConversion<string>();
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(t => t.CreatedBy)
+            .WithMany(u => u.CreatedTickets)
+            .HasForeignKey(t => t.CreatedById)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(t => t.Assigned)
+            .WithMany(u => u.AssignedTickets)
+            .HasForeignKey(t => t.AssignedId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(t => t.Reporter)
+            .WithMany(u => u.ReportingTickets)
+            .HasForeignKey(t => t.ReporterId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -27,4 +27,7 @@ public class User : BaseEntity
     public required Roles Role { get; set; }
 
     public List<BoardMembership> Memberships { get; } = [];
+    public List<Ticket.Ticket> CreatedTickets { get; } = [];
+    public List<Ticket.Ticket> AssignedTickets { get; } = [];
+    public List<Ticket.Ticket> ReportingTickets { get; } = [];
 }

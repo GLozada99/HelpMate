@@ -24,4 +24,5 @@ public class Board : BaseEntity
     public User.User? CreatedBy { get; set; }
 
     public List<BoardMembership> Memberships { get; } = [];
+    public List<Ticket.Ticket> Tickets { get; } = [];
 }
