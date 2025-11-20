@@ -6,4 +6,5 @@ riderModule.iml
 .idea
 .containers
 .woodpecker
-
+.env
+.config
