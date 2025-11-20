@@ -13,4 +13,6 @@ db-new-migration migration_name:
 		--startup-project src/API
 
 db-update:
-	dotnet ef database update --project Infrastructure
+	dotnet ef database update \
+		--project src/Infrastructure \
+		--startup-project src/API
