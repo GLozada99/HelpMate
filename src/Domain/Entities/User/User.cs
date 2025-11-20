@@ -1,3 +1,4 @@
+using Domain.Entities.Board;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities.User;
@@ -24,4 +25,6 @@ public class User : BaseEntity
     public required string FullName { get; set; }
     public required Statuses Status { get; set; }
     public required Roles Role { get; set; }
+
+    public List<BoardMembership> Memberships { get; } = [];
 }

@@ -10,6 +10,7 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
 
     public DbSet<User> Users { get; set; }
     public DbSet<Board> Boards { get; set; }
+    public DbSet<BoardMembership> BoardMemberships { get; set; }
 
     public override int SaveChanges()
     {
@@ -62,6 +63,10 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
 
         modelBuilder.Entity<User>()
             .Property(o => o.Status)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<BoardMembership>()
+            .Property(o => o.Roles)
             .HasConversion<string>();
     }
 }

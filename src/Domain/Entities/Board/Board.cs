@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities.Board;
@@ -10,6 +11,10 @@ public class Board : BaseEntity
     public required string Code { get; set; }
     public required string Name { get; set; }
     public required string Description { get; set; }
+
+    [ForeignKey("User")]
     public required int CreatedById { get; set; }
     public User.User? CreatedBy { get; set; }
+
+    public List<BoardMembership> Memberships { get; } = [];
 }
