@@ -1,25 +1,21 @@
 using Infrastructure.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.ConfigureDependencies();
-builder.Services.ConfigureSettings();
-builder.Services.ConfigureDatabase(builder.Configuration);
+builder.Services.ConfigureDependencies()
+    .ConfigureSettings()
+    .ConfigureDatabase(builder.Configuration)
+    .ConfigureWeb()
+    .ConfigureApi()
+    .ConfigureCookies()
+    .ConfigureCoors()
+    .ConfigurePolicies();
 
-builder.Host.ConfigureSerilog();
+builder.Host.ConfigureSerilog(builder.Configuration);
 builder.Logging.ConfigureLogging();
-
-
-builder.Services.ConfigureWeb();
-builder.Services.ConfigureApi();
-builder.Services.ConfigureCookies();
-builder.Services.ConfigureCoors();
-builder.Services.ConfigurePolicies();
 
 
 var app = builder.Build();
 
-app.ConfigureWebApp();
-app.ConfigureSwagger();
-
-
-app.Run();
+app.ConfigureWebApp()
+    .ConfigureSwagger()
+    .Run();
