@@ -1,10 +1,9 @@
 using Infrastructure.Startup;
-using LubricambioBackend.Infrastructure.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureDependencies();
 builder.Services.ConfigureSettings();
-builder.Services.ConfigureDatabase();
+builder.Services.ConfigureDatabase(builder.Configuration);
 
 builder.Host.ConfigureSerilog();
 builder.Logging.ConfigureLogging();
