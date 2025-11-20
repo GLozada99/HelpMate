@@ -30,4 +30,5 @@ public class User : BaseEntity
     public List<Ticket.Ticket> CreatedTickets { get; } = [];
     public List<Ticket.Ticket> AssignedTickets { get; } = [];
     public List<Ticket.Ticket> ReportingTickets { get; } = [];
+    public List<Ticket.Ticket> WatchingTickets { get; } = [];
 }

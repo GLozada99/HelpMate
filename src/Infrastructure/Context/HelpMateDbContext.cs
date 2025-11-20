@@ -119,5 +119,22 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
                     .HasForeignKey("TicketId")
                     .OnDelete(DeleteBehavior.Cascade)
             );
+
+        modelBuilder.Entity<Ticket>()
+            .HasMany(t => t.Watchers)
+            .WithMany(tw => tw.WatchingTickets)
+            .UsingEntity<Dictionary<string, object>>(
+                "TicketWatchers",
+                j => j
+                    .HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j
+                    .HasOne<Ticket>()
+                    .WithMany()
+                    .HasForeignKey("TicketId")
+                    .OnDelete(DeleteBehavior.Cascade)
+            );
     }
 }

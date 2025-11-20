@@ -50,4 +50,5 @@ public class Ticket : BaseEntity
     public List<TicketComment> Comments { get; } = [];
 
     public List<Tag> Tags { get; } = [];
+    public List<User.User> Watchers { get; } = [];
 }
