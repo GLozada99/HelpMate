@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(HelpMateDbContext))]
-    partial class HelpMateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251120221441_FixBoardMembershipEnumDisplay")]
+    partial class FixBoardMembershipEnumDisplay
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,9 +235,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NewValue")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("OldValue")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("TicketId")

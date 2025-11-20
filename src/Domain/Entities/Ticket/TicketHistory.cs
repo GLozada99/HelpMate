@@ -20,8 +20,8 @@ public class TicketHistory : BaseEntity
     }
 
     public required ActionTypes Action { get; set; }
-    public required string OldValue { get; set; }
-    public required string NewValue { get; set; }
+    public string? OldValue { get; set; }
+    public string? NewValue { get; set; }
 
     [ForeignKey("User")]
     public required int UserId { get; set; }
