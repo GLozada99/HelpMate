@@ -1,10 +1,14 @@
 using Domain.Entities;
+using Domain.Entities.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Context;
 
-public class HelpMateDbContext(DbContextOptions options) : DbContext(options)
+public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : DbContext(options)
 {
+
+    public DbSet<User> Users { get; set; }
+
     public override int SaveChanges()
     {
         AddTimestamps();
@@ -46,5 +50,16 @@ public class HelpMateDbContext(DbContextOptions options) : DbContext(options)
                     throw new ArgumentOutOfRangeException();
             }
         }
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>()
+            .Property(o => o.Role)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<User>()
+            .Property(o => o.Status)
+            .HasConversion<string>();
     }
 }
