@@ -14,6 +14,7 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
     public DbSet<BoardMembership> BoardMemberships { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<TicketComment> TicketComments { get; set; }
+    public DbSet<Tag> Tags { get; set; }
 
     public override int SaveChanges()
     {
@@ -93,5 +94,30 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
             .WithMany(u => u.ReportingTickets)
             .HasForeignKey(t => t.ReporterId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .Property(o => o.Priority)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<Ticket>()
+            .Property(o => o.Status)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<Ticket>()
+            .HasMany(t => t.Tags)
+            .WithMany(tg => tg.Tickets)
+            .UsingEntity<Dictionary<string, object>>(
+                "TicketTag",
+                j => j
+                    .HasOne<Tag>()
+                    .WithMany()
+                    .HasForeignKey("TagId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j
+                    .HasOne<Ticket>()
+                    .WithMany()
+                    .HasForeignKey("TicketId")
+                    .OnDelete(DeleteBehavior.Cascade)
+            );
     }
 }

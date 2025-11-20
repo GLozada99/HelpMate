@@ -48,4 +48,6 @@ public class Ticket : BaseEntity
     public string Code() => $"{Board?.Code}-{Id}";
 
     public List<TicketComment> Comments { get; } = [];
+
+    public List<Tag> Tags { get; } = [];
 }
