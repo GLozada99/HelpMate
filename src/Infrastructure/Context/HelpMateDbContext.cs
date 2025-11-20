@@ -65,6 +65,10 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
             .Property(o => o.Status)
             .HasConversion<string>();
 
+        modelBuilder.Entity<Board>()
+            .Property(o => o.Status)
+            .HasConversion<string>();
+
         modelBuilder.Entity<BoardMembership>()
             .Property(o => o.Roles)
             .HasConversion<string>();
