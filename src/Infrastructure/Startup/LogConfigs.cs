@@ -4,7 +4,7 @@ using Serilog;
 using Serilog.Enrichers.CallerInfo;
 using Serilog.Templates;
 
-namespace LubricambioBackend.Infrastructure.Startup;
+namespace Infrastructure.Startup;
 
 public static class LogConfigs
 {

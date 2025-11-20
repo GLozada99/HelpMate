@@ -1,5 +1,4 @@
 using Infrastructure.Startup;
-using LubricambioBackend.Infrastructure.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureDependencies();
