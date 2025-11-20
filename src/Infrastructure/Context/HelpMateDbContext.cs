@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Entities.Board;
 using Domain.Entities.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
 {
 
     public DbSet<User> Users { get; set; }
+    public DbSet<Board> Boards { get; set; }
 
     public override int SaveChanges()
     {
