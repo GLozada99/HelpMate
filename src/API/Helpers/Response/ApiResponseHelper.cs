@@ -1,11 +1,12 @@
+using API.Interfaces.Response;
 using Application.DTOs.Response;
 using Application.Helpers.Response;
-using Infrastructure.Logging;
+using Infrastructure.Helpers.Tracking;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Helpers.Response;
 
-public class ApiResponseHelper
+public class ApiResponseHelper(TrackingIdHelper trackingIdHelper) : IApiResponseHelper
 {
     public ActionResult<ApiResponse<T>> Success<T>(
         T? result,
@@ -14,7 +15,8 @@ public class ApiResponseHelper
     )
     {
         var wrapped =
-            ApiResponseFactory.Success(result!, messages, TrackingIdEnricher.Current);
+            ApiResponseFactory.Success(result!, messages,
+                trackingIdHelper.GetTrackingId());
         return responseBuilder(wrapped);
     }
 
@@ -24,7 +26,8 @@ public class ApiResponseHelper
         List<string>? messages = null)
     {
         var wrapped =
-            ApiResponseFactory.Failure(errors, messages, TrackingIdEnricher.Current);
+            ApiResponseFactory.Failure(errors, messages,
+                trackingIdHelper.GetTrackingId());
         return responseBuilder(wrapped);
     }
 }

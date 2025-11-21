@@ -32,5 +32,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Domain\Domain.csproj"/>
+        <ProjectReference Include="..\API\API.csproj"/>
     </ItemGroup>
 </Project>
