@@ -5,22 +5,15 @@ using Serilog.Events;
 
 namespace Infrastructure.Logging;
 
-public class UserIdEnricher : ILogEventEnricher
+public class UserIdEnricher(IHttpContextAccessor contextAccessor) : ILogEventEnricher
 {
-    private readonly IHttpContextAccessor _contextAccessor;
-
     public UserIdEnricher() : this(new HttpContextAccessor())
     {
     }
 
-    public UserIdEnricher(IHttpContextAccessor contextAccessor)
-    {
-        _contextAccessor = contextAccessor;
-    }
-
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        var httpContext = _contextAccessor.HttpContext;
+        var httpContext = contextAccessor.HttpContext;
         if (httpContext == null)
             return;
 
