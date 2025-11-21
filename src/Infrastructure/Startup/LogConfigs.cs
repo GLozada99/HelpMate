@@ -34,8 +34,7 @@ public static class LogConfigs
                 .Enrich.WithCallerInfo(true,
                     ["Domain", "Application", "Infrastructure", "API"])
                 .WriteTo.Console(outputTemplate: consoleTemplate)
-                .WriteTo.File(fileFormatter, logPath, buffered: false,
-                    rollingInterval: RollingInterval.Day);
+                .WriteTo.File(fileFormatter, logPath, buffered: false);
         });
 
         return host;
