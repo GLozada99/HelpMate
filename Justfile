@@ -16,3 +16,7 @@ db-update:
 	dotnet ef database update \
 		--project src/Infrastructure \
 		--startup-project src/API
+
+api-run port="9090":
+	#!/usr/bin/env bash
+	dotnet run --project src/API --urls "http://localhost:{{port}}"

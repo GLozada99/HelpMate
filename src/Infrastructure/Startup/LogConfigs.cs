@@ -23,7 +23,7 @@ public static class LogConfigs
             const string consoleTemplate =
                 "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}]" +
                 " [TrackingId:{TrackingId}] {Message:lj}{NewLine}{Exception}";
-            var logPath = configuration.GetSection("Logging")["Path"] ?? "/tmp/api.json";
+            var logPath = configuration.GetSection("Logs")["Path"] ?? "/tmp/api.json";
 
             logger
                 .ReadFrom.Configuration(context.Configuration)
@@ -31,7 +31,8 @@ public static class LogConfigs
                 .Enrich.FromLogContext()
                 .Enrich.With<TrackingIdEnricher>()
                 .Enrich.With<UserIdEnricher>()
-                .Enrich.WithCallerInfo(true, ["Domain", "Application", "Infrastructure", "API"])
+                .Enrich.WithCallerInfo(true,
+                    ["Domain", "Application", "Infrastructure", "API"])
                 .WriteTo.Console(outputTemplate: consoleTemplate)
                 .WriteTo.File(fileFormatter, logPath, buffered: false,
                     rollingInterval: RollingInterval.Day);
