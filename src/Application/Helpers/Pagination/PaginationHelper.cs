@@ -1,4 +1,3 @@
-using System.Linq.Dynamic.Core;
 using Application.DTOs.Pagination;
 
 namespace Application.Helpers.Pagination;
@@ -10,12 +9,8 @@ public static class PaginationHelper
         PaginationQuery pagination)
     {
         var totalItems = query.Count();
-        var orderByField = string.IsNullOrWhiteSpace(pagination.OrderBy)
-            ? "CreatedAt"
-            : pagination.OrderBy;
 
         var items = query
-            .OrderBy(orderByField)
             .Skip((pagination.Page - 1) * pagination.PageSize)
             .Take(pagination.PageSize);
 

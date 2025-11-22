@@ -16,7 +16,7 @@ public static class CommonConfigs
     public static IServiceCollection ConfigureDependencies(
         this IServiceCollection services)
     {
-        services.AddScoped<ITrackingIdProvider, TrackingIdProvider>();
+        services.AddSingleton<ITrackingIdProvider, TrackingIdProvider>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IApiResponseHelper, ApiResponseHelper>();
         services.AddScoped<IUserService, UserService>();
