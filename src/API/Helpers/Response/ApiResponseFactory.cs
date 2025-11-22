@@ -1,6 +1,6 @@
-using Application.DTOs.Response;
+using Application.DTOs.Shared;
 
-namespace Application.Helpers.Response;
+namespace API.Helpers.Response;
 
 public static class ApiResponseFactory
 {
