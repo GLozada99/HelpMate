@@ -1,4 +1,5 @@
 using Domain.Entities.Board;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities.User;
@@ -6,25 +7,12 @@ namespace Domain.Entities.User;
 [Index(nameof(Email), IsUnique = true)]
 public class User : BaseEntity
 {
-    public enum Roles
-    {
-        Admin,
-        Agent,
-        Customer
-    }
-
-    public enum Statuses
-    {
-        Active,
-        Inactive
-    }
-
     public required string Email { get; set; }
     public required string Password { get; set; }
     public required string FullName { get; set; }
-    public required Statuses Status { get; set; } = Statuses.Active;
+    public required UserStatus Status { get; set; } = UserStatus.Active;
 
-    public required Roles Role { get; set; }
+    public required UserRole Role { get; set; }
 
     public List<BoardMembership> Memberships { get; } = [];
     public List<Ticket.Ticket> CreatedTickets { get; } = [];
