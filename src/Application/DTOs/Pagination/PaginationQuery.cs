@@ -1,0 +1,9 @@
+namespace Application.DTOs.Pagination;
+
+public record PaginationQuery
+{
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
+
+    public string? OrderBy { get; init; }
+}
