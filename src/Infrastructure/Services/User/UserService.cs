@@ -20,7 +20,7 @@ public class UserService(
     {
         if (await GetUserByEmail(dto.Email) != null)
         {
-            logger.LogWarning("Registration failed — Email already exists: {Email}",
+            logger.LogWarning("User with email '{Email}' already exists.",
                 dto.Email);
             return Result.Fail(new UserEmailAlreadyInUseError(dto.Email));
         }
@@ -34,7 +34,13 @@ public class UserService(
             Role = MapRole(dto.Role)
         };
         context.Users.Add(user);
-        await context.SaveChangesAsync();
+
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+        if (saveResult.IsFailed)
+            return saveResult;
 
         var resultDto = new UserDTO(
             user.Id,
@@ -95,7 +101,12 @@ public class UserService(
         if (dto.Status == UpdateUserStatus.Active)
             user.Status = UserStatus.Active;
 
-        await context.SaveChangesAsync();
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+        if (saveResult.IsFailed)
+            return saveResult;
 
         var resultDto = new UserDTO(
             user.Id,
@@ -116,9 +127,11 @@ public class UserService(
             return Result.Fail(new UserNotFoundError(id));
 
         user.Status = UserStatus.Inactive;
-        await context.SaveChangesAsync();
-
-        return Result.Ok();
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+        return saveResult.IsFailed ? saveResult : Result.Ok();
     }
 
     public Task<Result<IQueryable<UserDTO>>> GetUsers(GetUserQueryDTO dto)
