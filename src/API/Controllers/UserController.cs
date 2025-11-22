@@ -13,7 +13,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/users")]
 [Authorize(Roles = "Admin,SuperAdmin")]
-public class UsersController(
+public class UserController(
     IApiResponseHelper apiResponseHelper,
     IUserService userService)
     : BaseController(apiResponseHelper)
@@ -26,7 +26,7 @@ public class UsersController(
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value,
                 data => CreatedAtAction(nameof(GetUser), new { id = data.Result!.Id },
-                    data.Result));
+                    data));
 
         var error = result.Errors[0];
         var errors = result.Errors.Select(e => e.Message).ToList();

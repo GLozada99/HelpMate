@@ -20,5 +20,6 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <InternalsVisibleTo Include="API.IntegrationTests"/>
     </ItemGroup>
 </Project>

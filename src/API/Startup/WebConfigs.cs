@@ -1,9 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+using API.Helpers.Response;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Infrastructure.Startup;
 
@@ -56,6 +55,21 @@ public static class WebConfigs
 
     public static IServiceCollection ConfigureApi(this IServiceCollection services)
     {
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState
+                    .Where(x => x.Value?.Errors.Count > 0)
+                    .SelectMany(x => x.Value?.Errors.Select(e => e.ErrorMessage) ?? [])
+                    .ToList();
+
+                var response = ApiResponseFactory.Failure(errors);
+
+                return new BadRequestObjectResult(response);
+            };
+        });
+
         services.AddEndpointsApiExplorer();
         services.AddOpenApiDocument();
         return services;

@@ -19,3 +19,5 @@ var app = builder.Build();
 app.ConfigureWebApp()
     .ConfigureSwagger()
     .Run();
+
+public partial class Program;

@@ -1,11 +1,11 @@
 using API.Interfaces.Response;
-using API.Services.Tracking;
 using Application.DTOs.Shared;
+using Application.Interfaces.Tracking;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Helpers.Response;
 
-public class ApiResponseHelper(TrackingIdProvider trackingIdProvider)
+public class ApiResponseHelper(ITrackingIdProvider trackingIdProvider)
     : IApiResponseHelper
 {
     public ObjectResult Failure(
@@ -26,7 +26,7 @@ public class ApiResponseHelper(TrackingIdProvider trackingIdProvider)
     )
     {
         var wrapped =
-            ApiResponseFactory.Success(result!, messages,
+            ApiResponseFactory.Success(result, messages,
                 trackingIdProvider.GetTrackingId());
         return responseBuilder(wrapped);
     }
