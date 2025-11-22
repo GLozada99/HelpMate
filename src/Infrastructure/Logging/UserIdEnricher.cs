@@ -7,10 +7,6 @@ namespace Infrastructure.Logging;
 
 public class UserIdEnricher(IHttpContextAccessor contextAccessor) : ILogEventEnricher
 {
-    public UserIdEnricher() : this(new HttpContextAccessor())
-    {
-    }
-
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         var httpContext = contextAccessor.HttpContext;

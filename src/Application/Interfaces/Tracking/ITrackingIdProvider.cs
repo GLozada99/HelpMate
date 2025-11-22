@@ -1,6 +1,6 @@
 namespace Application.Interfaces.Tracking;
 
-public interface ITrackingIdHelper
+public interface ITrackingIdProvider
 {
     string GetTrackingId();
 }
