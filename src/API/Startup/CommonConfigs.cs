@@ -3,8 +3,10 @@ using API.Interfaces.Response;
 using API.Services.Tracking;
 using Application.Interfaces.Auth;
 using Application.Interfaces.Tracking;
+using Application.Interfaces.User;
 using Infrastructure.Context;
 using Infrastructure.Services.Auth;
+using Infrastructure.Services.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Startup;
@@ -17,6 +19,7 @@ public static class CommonConfigs
         services.AddScoped<ITrackingIdProvider, TrackingIdProvider>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IApiResponseHelper, ApiResponseHelper>();
+        services.AddScoped<IUserService, UserService>();
         return services;
     }
 
