@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Application.DTOs.Response;
+namespace Application.DTOs.Shared;
 
 public enum ResponseStatus
 {

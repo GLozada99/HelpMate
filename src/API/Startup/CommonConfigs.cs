@@ -1,11 +1,13 @@
 using API.Helpers.Response;
 using API.Interfaces.Response;
+using API.Services.Tracking;
+using Application.Interfaces.Auth;
 using Application.Interfaces.Tracking;
+using Application.Interfaces.User;
 using Infrastructure.Context;
-using Infrastructure.Helpers.Tracking;
+using Infrastructure.Services.Auth;
+using Infrastructure.Services.User;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Startup;
 
@@ -14,8 +16,11 @@ public static class CommonConfigs
     public static IServiceCollection ConfigureDependencies(
         this IServiceCollection services)
     {
-        services.AddScoped<ITrackingIdHelper, TrackingIdHelper>();
+        services.AddSingleton<ITrackingIdProvider, TrackingIdProvider>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IApiResponseHelper, ApiResponseHelper>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IAuthService, AuthService>();
         return services;
     }
 

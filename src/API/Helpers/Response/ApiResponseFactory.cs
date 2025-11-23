@@ -1,10 +1,10 @@
-using Application.DTOs.Response;
+using Application.DTOs.Shared;
 
-namespace Application.Helpers.Response;
+namespace API.Helpers.Response;
 
 public static class ApiResponseFactory
 {
-    public static ApiResponse<T> Success<T>(T result,
+    public static ApiResponse<T> Success<T>(T? result,
         List<string>? messages = null, string? trackingId = null)
     {
         return new ApiResponse<T>

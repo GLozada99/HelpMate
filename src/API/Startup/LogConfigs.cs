@@ -1,7 +1,5 @@
+using Application.Interfaces.Tracking;
 using Infrastructure.Logging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Enrichers.CallerInfo;
 using Serilog.Templates;
@@ -25,12 +23,15 @@ public static class LogConfigs
                 " [TrackingId:{TrackingId}] {Message:lj}{NewLine}{Exception}";
             var logPath = configuration.GetSection("Logs")["Path"] ?? "/tmp/api.json";
 
+            var trackingIdProvider = services.GetRequiredService<ITrackingIdProvider>();
+            var httpContextAccessor =
+                services.GetRequiredService<IHttpContextAccessor>();
             logger
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
-                .Enrich.With<TrackingIdEnricher>()
-                .Enrich.With<UserIdEnricher>()
+                .Enrich.With(new TrackingIdEnricher(trackingIdProvider))
+                .Enrich.With(new UserIdEnricher(httpContextAccessor))
                 .Enrich.WithCallerInfo(true,
                     ["Domain", "Application", "Infrastructure", "API"])
                 .WriteTo.Console(outputTemplate: consoleTemplate)

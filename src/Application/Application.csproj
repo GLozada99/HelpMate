@@ -7,7 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Interfaces\"/>
         <Folder Include="Services\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Domain\Domain.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
+        <PackageReference Include="FluentResults" Version="4.0.0"/>
     </ItemGroup>
 </Project>

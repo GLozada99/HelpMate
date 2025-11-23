@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Domain.Entities.User;
+using Domain.Enums;
 using Infrastructure.Context;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -54,7 +54,7 @@ public static class AuthConfigs
                         return;
 
                     // Log out the user if it is not active
-                    if (user is not { Status: User.Statuses.Active })
+                    if (user is not { Status: UserStatus.Active })
                     {
                         context.RejectPrincipal();
                         await context.HttpContext.SignOutAsync(

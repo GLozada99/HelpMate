@@ -1,11 +1,13 @@
 using System.Security.Claims;
-using API.Helpers.Response;
+using API.Interfaces.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
-public class BaseController(ApiResponseHelper apiResponseHelper) : ControllerBase
+public class BaseController(IApiResponseHelper apiResponseHelper) : ControllerBase
 {
+    protected IApiResponseHelper ApiResponseHelper => apiResponseHelper;
+
     protected int GetUserId()
     {
         if (User is not { Identity.IsAuthenticated: true })
