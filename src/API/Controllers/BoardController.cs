@@ -1,5 +1,4 @@
 using API.Interfaces.Response;
-using Application.DTOs.Board;
 using Application.DTOs.Board.Board;
 using Application.DTOs.Board.BoardMembership;
 using Application.DTOs.Shared;
@@ -25,9 +24,7 @@ public class BoardController(
     public async Task<ActionResult<ApiResponse<BoardDTO>>> CreateBoard(
         CreateBoardDTO dto)
     {
-        var requesterId = GetUserId();
-
-        var result = await boardService.CreateBoard(dto, requesterId);
+        var result = await boardService.CreateBoard(dto, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value,
@@ -51,9 +48,7 @@ public class BoardController(
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ApiResponse<BoardDTO>>> GetBoard(int id)
     {
-        var requesterId = GetUserId();
-
-        var result = await boardService.GetBoard(id, requesterId);
+        var result = await boardService.GetBoard(id, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value, Ok);
@@ -74,9 +69,7 @@ public class BoardController(
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IEnumerable<BoardDTO>>>> GetBoards()
     {
-        var requesterId = GetUserId();
-
-        var result = await boardService.GetBoards(requesterId);
+        var result = await boardService.GetBoards(UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value, Ok);
@@ -92,9 +85,7 @@ public class BoardController(
     public async Task<ActionResult<ApiResponse<BoardDTO>>> UpdateBoard(
         int id, UpdateBoardDTO dto)
     {
-        var requesterId = GetUserId();
-
-        var result = await boardService.UpdateBoard(id, dto, requesterId);
+        var result = await boardService.UpdateBoard(id, dto, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value, Ok);
@@ -115,9 +106,7 @@ public class BoardController(
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<object>>> DeactivateBoard(int id)
     {
-        var requesterId = GetUserId();
-
-        var result = await boardService.DeactivateBoard(id, requesterId);
+        var result = await boardService.DeactivateBoard(id, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success<object>(null, Ok);
@@ -140,10 +129,8 @@ public class BoardController(
         CreateBoardMembership(
             int boardId, CreateBoardMembershipDTO dto)
     {
-        var requesterId = GetUserId();
-
         var result =
-            await boardService.CreateBoardMembership(boardId, dto, requesterId);
+            await boardService.CreateBoardMembership(boardId, dto, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value,
@@ -171,9 +158,7 @@ public class BoardController(
         GetBoardMemberships(
             int boardId)
     {
-        var requesterId = GetUserId();
-
-        var result = await boardService.GetBoardMemberships(boardId, requesterId);
+        var result = await boardService.GetBoardMemberships(boardId, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value, Ok);
@@ -196,10 +181,8 @@ public class BoardController(
         UpdateBoardMembership(
             int membershipId, UpdateBoardMembershipDTO dto)
     {
-        var requesterId = GetUserId();
-
         var result =
-            await boardService.UpdateBoardMembership(membershipId, dto, requesterId);
+            await boardService.UpdateBoardMembership(membershipId, dto, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value, Ok);
@@ -222,10 +205,8 @@ public class BoardController(
     public async Task<ActionResult<ApiResponse<object>>> RemoveBoardMembership(
         int membershipId)
     {
-        var requesterId = GetUserId();
-
         var result =
-            await boardService.RemoveBoardMembership(membershipId, requesterId);
+            await boardService.RemoveBoardMembership(membershipId, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success<object>(null, Ok);

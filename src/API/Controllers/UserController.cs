@@ -23,7 +23,7 @@ public class UserController(
     [HttpPost]
     public async Task<ActionResult<ApiResponse<UserDTO>>> CreateUser(CreateUserDTO dto)
     {
-        var result = await userService.CreateUser(dto);
+        var result = await userService.CreateUser(dto, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value,
@@ -64,7 +64,7 @@ public class UserController(
     public async Task<ActionResult<ApiResponse<UserDTO>>> UpdateUser(int id,
         UpdateUserDTO dto)
     {
-        var result = await userService.UpdateUser(id, dto);
+        var result = await userService.UpdateUser(id, dto, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value, Ok);
@@ -83,7 +83,7 @@ public class UserController(
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<object>>> DeactivateUser(int id)
     {
-        var result = await userService.DeactivateUser(id);
+        var result = await userService.DeactivateUser(id, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success<object>(null, Ok);

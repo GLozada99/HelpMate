@@ -77,4 +77,26 @@ public static class UserRulesHelper
                     $"Deactivate '{targetUserRole}' User"))
         };
     }
+
+    public static UserRole MapRole(CreateUserRole role)
+    {
+        return role switch
+        {
+            CreateUserRole.Customer => UserRole.Customer,
+            CreateUserRole.Agent => UserRole.Agent,
+            CreateUserRole.Admin => UserRole.Admin,
+            _ => throw new ArgumentOutOfRangeException(nameof(role))
+        };
+    }
+
+    public static UserRole MapRole(UpdateUserRole role)
+    {
+        return role switch
+        {
+            UpdateUserRole.Customer => UserRole.Customer,
+            UpdateUserRole.Agent => UserRole.Agent,
+            UpdateUserRole.Admin => UserRole.Admin,
+            _ => throw new ArgumentOutOfRangeException(nameof(role))
+        };
+    }
 }
