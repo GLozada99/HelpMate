@@ -175,15 +175,138 @@ public class BoardService(
         return Result.Ok(dtos);
     }
 
-    public Task<Result<BoardDTO>> UpdateBoard(int boardId, UpdateBoardDTO dto,
+    public async Task<Result<BoardDTO>> UpdateBoard(
+        int boardId,
+        UpdateBoardDTO dto,
         int requesterId)
     {
-        throw new NotImplementedException();
+        var board = await context.Boards.FindAsync(boardId);
+
+        if (board == null)
+        {
+            logger.LogWarning(
+                "Cannot update Board with Id '{BoardId}' because it does not exist.",
+                boardId
+            );
+            return Result.Fail(new BoardNotFoundError(boardId));
+        }
+
+        var membership = await context.BoardMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.BoardId == boardId &&
+                m.UserId == requesterId &&
+                m.Role == MembershipRole.Owner
+            );
+
+        if (membership == null)
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to update Board '{BoardId}' either it is not a member or it is not an owner.",
+                requesterId, boardId
+            );
+            return Result.Fail(
+                new InsufficientUserPermissionsError(
+                    requesterId,
+                    $"Update Board with id {boardId}"
+                )
+            );
+        }
+
+        if (dto.Name != board.Name)
+            board.Name = dto.Name;
+
+        if (dto.Description != board.Description)
+            board.Description = dto.Description;
+
+        if (dto.Status == UpdateBoardStatus.Active &&
+            board.Status != BoardStatus.Active)
+            board.Status = BoardStatus.Active;
+
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (saveResult.IsFailed)
+            return saveResult.ToResult<BoardDTO>();
+
+        var dtoResult = new BoardDTO(
+            board.Id,
+            board.Code,
+            board.Name,
+            board.Description,
+            board.CreatedById,
+            board.Status,
+            board.CreatedAt
+        );
+
+        logger.LogInformation(
+            "Board '{BoardId}' was updated successfully by User '{UserId}'.",
+            boardId, requesterId
+        );
+
+        return Result.Ok(dtoResult);
     }
 
-    public Task<Result> DeactivateBoard(int boardId, int requesterId)
+    public async Task<Result> DeactivateBoard(int boardId, int requesterId)
     {
-        throw new NotImplementedException();
+        var board = await context.Boards.FindAsync(boardId);
+
+        if (board == null)
+        {
+            logger.LogWarning(
+                "Cannot deactivate Board with Id '{BoardId}' because it does not exist.",
+                boardId
+            );
+            return Result.Fail(new BoardNotFoundError(boardId));
+        }
+
+        var membership = await context.BoardMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.BoardId == boardId &&
+                m.UserId == requesterId &&
+                m.Role == MembershipRole.Owner
+            );
+
+        if (membership == null)
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to deactivate Board '{BoardId}' but either it is not a member or it is not an owner.",
+                requesterId, boardId
+            );
+            return Result.Fail(
+                new InsufficientUserPermissionsError(
+                    requesterId,
+                    $"Deactivate Board with id {boardId}"
+                )
+            );
+        }
+
+        if (board.Status == BoardStatus.Inactive)
+        {
+            logger.LogInformation(
+                "Board '{BoardId}' is already inactive. No changes were made.",
+                boardId
+            );
+            return Result.Ok();
+        }
+
+        board.Status = BoardStatus.Inactive;
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+        if (saveResult.IsFailed)
+            return saveResult;
+
+        logger.LogInformation(
+            "Board '{BoardId}' was deactivated successfully by User '{RequesterId}'.",
+            boardId, requesterId
+        );
+
+        return Result.Ok();
     }
 
     public Task<Result<BoardMembershipDTO>> CreateBoardMembership(int boardId,
