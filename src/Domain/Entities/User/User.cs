@@ -19,4 +19,6 @@ public class User : BaseEntity
     public List<Ticket.Ticket> AssignedTickets { get; } = [];
     public List<Ticket.Ticket> ReportingTickets { get; } = [];
     public List<Ticket.Ticket> WatchingTickets { get; } = [];
+
+    public bool IsActive => Status == UserStatus.Active;
 }
