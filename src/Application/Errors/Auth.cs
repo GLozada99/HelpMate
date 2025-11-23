@@ -10,3 +10,6 @@ public class InvalidCredentialsError()
 
 public class NotActiveUserError()
     : Error("User is not active.");
+
+public class InsufficientPermissionError()
+    : Error("SuperAdmin users cannot be deactivated.");
