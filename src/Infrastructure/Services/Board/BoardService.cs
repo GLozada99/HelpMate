@@ -96,10 +96,52 @@ public class BoardService(
         return Result.Ok(resultDTO);
     }
 
-    public Task<Result<BoardDTO>> GetBoard(int boardId, int requesterId)
+    public async Task<Result<BoardDTO>> GetBoard(int boardId, int requesterId)
     {
-        throw new NotImplementedException();
+        var board = await context.Boards
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == boardId);
+
+        if (board == null)
+        {
+            logger.LogWarning(
+                "Cannot retrieve Board with Id '{BoardId}' because it does not exist.",
+                boardId
+            );
+            return Result.Fail(new BoardNotFoundError(boardId));
+        }
+
+        var membership = await context.BoardMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.BoardId == boardId &&
+                m.UserId == requesterId
+            );
+
+        if (membership == null)
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to access Board '{BoardId}' but is not a member.",
+                requesterId, boardId
+            );
+            return Result.Fail(
+                new InsufficientUserPermissionsError(requesterId,
+                    $"Get Board with id {boardId}"));
+        }
+
+        var dto = new BoardDTO(
+            board.Id,
+            board.Code,
+            board.Name,
+            board.Description,
+            board.CreatedById,
+            board.Status,
+            board.CreatedAt
+        );
+
+        return Result.Ok(dto);
     }
+
 
     public Task<Result<IEnumerable<BoardDTO>>> GetBoards(int requesterId)
     {
