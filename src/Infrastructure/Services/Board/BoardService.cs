@@ -1,6 +1,6 @@
 using Application.DTOs.Board;
 using Application.DTOs.Board.Board;
-using Application.DTOs.Board.Membership;
+using Application.DTOs.Board.BoardMembership;
 using Application.Errors;
 using Application.Interfaces.Board;
 using Domain.Entities.Board;
@@ -98,36 +98,12 @@ public class BoardService(
 
     public async Task<Result<BoardDTO>> GetBoard(int boardId, int requesterId)
     {
-        var board = await context.Boards
-            .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.Id == boardId);
+        var boardResult = await GetBoard(boardId);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
+        var board = boardResult.Value;
 
-        if (board == null)
-        {
-            logger.LogWarning(
-                "Cannot retrieve Board with Id '{BoardId}' because it does not exist.",
-                boardId
-            );
-            return Result.Fail(new BoardNotFoundError(boardId));
-        }
-
-        var membership = await context.BoardMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m =>
-                m.BoardId == boardId &&
-                m.UserId == requesterId
-            );
-
-        if (membership == null)
-        {
-            logger.LogWarning(
-                "User '{RequesterId}' attempted to access Board '{BoardId}' but is not a member.",
-                requesterId, boardId
-            );
-            return Result.Fail(
-                new InsufficientUserPermissionsError(requesterId,
-                    $"Get Board with id {boardId}"));
-        }
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
         var dto = new BoardDTO(
             board.Id,
@@ -180,38 +156,16 @@ public class BoardService(
         UpdateBoardDTO dto,
         int requesterId)
     {
-        var board = await context.Boards.FindAsync(boardId);
+        var boardResult = await GetBoard(boardId);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
+        var board = boardResult.Value;
 
-        if (board == null)
-        {
-            logger.LogWarning(
-                "Cannot update Board with Id '{BoardId}' because it does not exist.",
-                boardId
-            );
-            return Result.Fail(new BoardNotFoundError(boardId));
-        }
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var membership = await context.BoardMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m =>
-                m.BoardId == boardId &&
-                m.UserId == requesterId &&
-                m.Role == MembershipRole.Owner
-            );
-
-        if (membership == null)
-        {
-            logger.LogWarning(
-                "User '{RequesterId}' attempted to update Board '{BoardId}' but it is not an owner.",
-                requesterId, boardId
-            );
-            return Result.Fail(
-                new InsufficientUserPermissionsError(
-                    requesterId,
-                    $"Update Board with id {boardId}"
-                )
-            );
-        }
+        var ownershipResult =
+            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
+        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
 
         if (dto.Name != board.Name)
             board.Name = dto.Name;
@@ -251,38 +205,16 @@ public class BoardService(
 
     public async Task<Result> DeactivateBoard(int boardId, int requesterId)
     {
-        var board = await context.Boards.FindAsync(boardId);
+        var boardResult = await GetBoard(boardId);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
+        var board = boardResult.Value;
 
-        if (board == null)
-        {
-            logger.LogWarning(
-                "Cannot deactivate Board with Id '{BoardId}' because it does not exist.",
-                boardId
-            );
-            return Result.Fail(new BoardNotFoundError(boardId));
-        }
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var membership = await context.BoardMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m =>
-                m.BoardId == boardId &&
-                m.UserId == requesterId &&
-                m.Role == MembershipRole.Owner
-            );
-
-        if (membership == null)
-        {
-            logger.LogWarning(
-                "User '{RequesterId}' attempted to deactivate Board '{BoardId}' but it is not an owner.",
-                requesterId, boardId
-            );
-            return Result.Fail(
-                new InsufficientUserPermissionsError(
-                    requesterId,
-                    $"Deactivate Board with id {boardId}"
-                )
-            );
-        }
+        var ownershipResult =
+            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
+        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
 
         if (board.Status == BoardStatus.Inactive)
         {
@@ -314,40 +246,15 @@ public class BoardService(
         CreateBoardMembershipDTO dto,
         int requesterId)
     {
-        var board = await context.Boards
-            .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.Id == boardId);
+        var boardResult = await GetBoard(boardId);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
-        if (board == null)
-        {
-            logger.LogWarning(
-                "Cannot create membership because Board '{BoardId}' does not exist.",
-                boardId
-            );
-            return Result.Fail<BoardMembershipDTO>(new BoardNotFoundError(boardId));
-        }
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var requesterMembership = await context.BoardMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m =>
-                m.BoardId == boardId &&
-                m.UserId == requesterId &&
-                m.Role == MembershipRole.Owner
-            );
-
-        if (requesterMembership == null)
-        {
-            logger.LogWarning(
-                "User '{RequesterId}' attempted to add a membership to Board '{BoardId}' but it is not an owner.",
-                requesterId, boardId
-            );
-            return Result.Fail<BoardMembershipDTO>(
-                new InsufficientUserPermissionsError(
-                    requesterId,
-                    $"Create membership in Board {boardId}"
-                )
-            );
-        }
+        var ownershipResult =
+            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
+        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
 
         var targetUser = await context.Users
             .AsNoTracking()
@@ -362,14 +269,8 @@ public class BoardService(
             return Result.Fail<BoardMembershipDTO>(new UserNotFoundError(dto.UserId));
         }
 
-        var existingMembership = await context.BoardMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m =>
-                m.BoardId == boardId &&
-                m.UserId == dto.UserId
-            );
-
-        if (existingMembership != null)
+        var userMembershipResult = await GetUserMembership(boardId, dto.UserId);
+        if (userMembershipResult.IsSuccess)
         {
             logger.LogWarning(
                 "Cannot create membership because User '{UserId}' is already a member of Board '{BoardId}'.",
@@ -423,20 +324,8 @@ public class BoardService(
         int boardId,
         int requesterId)
     {
-        var board = await context.Boards
-            .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.Id == boardId);
-
-        if (board == null)
-        {
-            logger.LogWarning(
-                "Cannot retrieve BoardMemberships because Board '{BoardId}' does not exist.",
-                boardId
-            );
-            return Result.Fail<IEnumerable<BoardMembershipDTO>>(
-                new BoardNotFoundError(boardId)
-            );
-        }
+        var boardResult = await GetBoard(boardId);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
         var memberships = await context.BoardMemberships
             .AsNoTracking()
@@ -494,27 +383,12 @@ public class BoardService(
             );
         }
 
-        var requesterMembership = await context.BoardMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m =>
-                m.BoardId == membership.BoardId &&
-                m.UserId == requesterId &&
-                m.Role == MembershipRole.Owner
-            );
+        var membershipResult = await GetUserMembership(membership.BoardId, requesterId);
+        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        if (requesterMembership == null)
-        {
-            logger.LogWarning(
-                "User '{RequesterId}' attempted to update membership '{MembershipId}' on Board '{BoardId}' but it is not an owner.",
-                requesterId, membershipId, membership.BoardId
-            );
-            return Result.Fail<BoardMembershipDTO>(
-                new InsufficientUserPermissionsError(
-                    requesterId,
-                    $"Update BoardMembership {membershipId}"
-                )
-            );
-        }
+        var ownershipResult =
+            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
+        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
 
         membership.Role = dto.Role;
 
@@ -708,5 +582,55 @@ public class BoardService(
         );
 
         return Result.Ok();
+    }
+
+    private async Task<Result<Domain.Entities.Board.Board>>
+        GetBoard(int boardId)
+    {
+        var board = await context.Boards
+            .FirstOrDefaultAsync(b => b.Id == boardId);
+
+        if (board != null) return Result.Ok(board);
+
+        logger.LogWarning(
+            "Board '{BoardId}' does not exist.",
+            boardId
+        );
+        return Result.Fail<Domain.Entities.Board.Board>(
+            new BoardNotFoundError(boardId)
+        );
+    }
+
+    private async Task<Result<BoardMembership>>
+        GetUserMembership(int boardId, int requesterId)
+    {
+        var membership = await context.BoardMemberships
+            .FirstOrDefaultAsync(m => m.BoardId == boardId && m.UserId == requesterId);
+
+        if (membership != null) return Result.Ok(membership);
+        logger.LogWarning(
+            "User '{RequesterId}' has no membership in Board '{BoardId}'.",
+            requesterId, boardId
+        );
+
+        return Result.Fail<BoardMembership>(
+            new InsufficientUserPermissionsError(
+                requesterId,
+                $"Access Board {boardId}"
+            )
+        );
+    }
+
+    private static Result CheckOwnership(BoardMembership boardMembership,
+        string errorMessage)
+    {
+        if (boardMembership.Role == MembershipRole.Owner) return Result.Ok();
+
+        return Result.Fail(
+            new InsufficientUserPermissionsError(
+                boardMembership.UserId,
+                errorMessage
+            )
+        );
     }
 }

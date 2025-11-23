@@ -1,6 +1,6 @@
 using Application.DTOs.Board;
 using Application.DTOs.Board.Board;
-using Application.DTOs.Board.Membership;
+using Application.DTOs.Board.BoardMembership;
 using FluentResults;
 
 namespace Application.Interfaces.Board;
