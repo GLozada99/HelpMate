@@ -202,7 +202,7 @@ public class BoardService(
         if (membership == null)
         {
             logger.LogWarning(
-                "User '{RequesterId}' attempted to update Board '{BoardId}' either it is not a member or it is not an owner.",
+                "User '{RequesterId}' attempted to update Board '{BoardId}' but it is not an owner.",
                 requesterId, boardId
             );
             return Result.Fail(
@@ -273,7 +273,7 @@ public class BoardService(
         if (membership == null)
         {
             logger.LogWarning(
-                "User '{RequesterId}' attempted to deactivate Board '{BoardId}' but either it is not a member or it is not an owner.",
+                "User '{RequesterId}' attempted to deactivate Board '{BoardId}' but it is not an owner.",
                 requesterId, boardId
             );
             return Result.Fail(
@@ -338,7 +338,7 @@ public class BoardService(
         if (requesterMembership == null)
         {
             logger.LogWarning(
-                "User '{RequesterId}' attempted to add a membership to Board '{BoardId}' but either is not a member or  it is not an owner.",
+                "User '{RequesterId}' attempted to add a membership to Board '{BoardId}' but it is not an owner.",
                 requesterId, boardId
             );
             return Result.Fail<BoardMembershipDTO>(
@@ -419,22 +419,204 @@ public class BoardService(
     }
 
 
-    public Task<Result<IEnumerable<BoardMembershipDTO>>> GetBoardMemberships(
-        int boardId, int requesterId)
+    public async Task<Result<IEnumerable<BoardMembershipDTO>>> GetBoardMemberships(
+        int boardId,
+        int requesterId)
     {
-        throw new NotImplementedException();
+        var board = await context.Boards
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == boardId);
+
+        if (board == null)
+        {
+            logger.LogWarning(
+                "Cannot retrieve BoardMemberships because Board '{BoardId}' does not exist.",
+                boardId
+            );
+            return Result.Fail<IEnumerable<BoardMembershipDTO>>(
+                new BoardNotFoundError(boardId)
+            );
+        }
+
+        var memberships = await context.BoardMemberships
+            .AsNoTracking()
+            .Where(m => m.BoardId == boardId)
+            .ToListAsync();
+
+        if (memberships.All(m => m.UserId != requesterId))
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to retrieve memberships for Board '{BoardId}' but is not a member.",
+                requesterId, boardId
+            );
+
+            return Result.Fail<IEnumerable<BoardMembershipDTO>>(
+                new InsufficientUserPermissionsError(
+                    requesterId,
+                    $"View memberships for Board {boardId}"
+                )
+            );
+        }
+
+        var dtoList = memberships.Select(m => new BoardMembershipDTO(
+            m.Id,
+            m.BoardId,
+            m.UserId,
+            m.Role,
+            m.CreatedAt
+        ));
+
+        logger.LogInformation(
+            "Retrieved {Count} memberships for Board '{BoardId}' by User '{RequesterId}'.",
+            memberships.Count, boardId, requesterId
+        );
+
+        return Result.Ok(dtoList);
     }
 
-    public Task<Result<BoardMembershipDTO>> UpdateBoardMembership(int membershipId,
+
+    public async Task<Result<BoardMembershipDTO>> UpdateBoardMembership(
+        int membershipId,
         UpdateBoardMembershipDTO dto,
         int requesterId)
     {
-        throw new NotImplementedException();
+        var membership = await context.BoardMemberships.Include(m => m.Board)
+            .FirstOrDefaultAsync(m => m.Id == membershipId);
+
+        if (membership == null)
+        {
+            logger.LogWarning(
+                "Cannot update BoardMembership '{MembershipId}' because it does not exist.",
+                membershipId
+            );
+            return Result.Fail<BoardMembershipDTO>(
+                new BoardMembershipNotFoundError(membershipId)
+            );
+        }
+
+        var requesterMembership = await context.BoardMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.BoardId == membership.BoardId &&
+                m.UserId == requesterId &&
+                m.Role == MembershipRole.Owner
+            );
+
+        if (requesterMembership == null)
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to update membership '{MembershipId}' on Board '{BoardId}' but it is not an owner.",
+                requesterId, membershipId, membership.BoardId
+            );
+            return Result.Fail<BoardMembershipDTO>(
+                new InsufficientUserPermissionsError(
+                    requesterId,
+                    $"Update BoardMembership {membershipId}"
+                )
+            );
+        }
+
+        membership.Role = dto.Role;
+
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (saveResult.IsFailed)
+            return saveResult.ToResult<BoardMembershipDTO>();
+
+        var resultDto = new BoardMembershipDTO(
+            membership.Id,
+            membership.BoardId,
+            membership.UserId,
+            membership.Role,
+            membership.CreatedAt
+        );
+
+        logger.LogInformation(
+            "Membership '{MembershipId}' on Board '{BoardId}' was updated to role '{Role}' by User '{RequesterId}'.",
+            membershipId, membership.BoardId, membership.Role, requesterId
+        );
+
+        return Result.Ok(resultDto);
     }
 
-    public Task<Result> RemoveBoardMembership(int membershipId, int requesterId)
+    public async Task<Result> RemoveBoardMembership(int membershipId, int requesterId)
     {
-        throw new NotImplementedException();
+        var membership = await context.BoardMemberships
+            .FirstOrDefaultAsync(m => m.Id == membershipId);
+
+        if (membership == null)
+        {
+            logger.LogWarning(
+                "Cannot remove BoardMembership '{MembershipId}' because it does not exist.",
+                membershipId
+            );
+            return Result.Fail(new BoardMembershipNotFoundError(membershipId));
+        }
+
+        var requesterMembership = await context.BoardMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.BoardId == membership.BoardId &&
+                m.UserId == requesterId &&
+                m.Role == MembershipRole.Owner
+            );
+
+        if (requesterMembership == null)
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to remove membership '{MembershipId}' from Board '{BoardId}' but is not a member.",
+                requesterId, membershipId, membership.BoardId
+            );
+            return Result.Fail(new InsufficientUserPermissionsError(
+                requesterId,
+                $"Remove BoardMembership {membershipId}"
+            ));
+        }
+
+        if (membership.Role == MembershipRole.Owner)
+        {
+            var ownersCount = await context.BoardMemberships
+                .AsNoTracking()
+                .CountAsync(m =>
+                    m.BoardId == membership.BoardId &&
+                    m.Role == MembershipRole.Owner
+                );
+
+            if (ownersCount <= 1)
+            {
+                logger.LogWarning(
+                    "Cannot remove membership '{MembershipId}' — it is the last Owner in Board '{BoardId}'.",
+                    membershipId, membership.BoardId
+                );
+
+                return Result.Fail(new InsufficientUserPermissionsError(
+                    requesterId,
+                    $"Remove last Owner from Board {membership.BoardId}"
+                ));
+            }
+        }
+
+        // --- 7. Remove membership ---
+        context.BoardMemberships.Remove(membership);
+
+        // --- 8. Save changes ---
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (saveResult.IsFailed)
+            return saveResult;
+
+        logger.LogInformation(
+            "Membership '{MembershipId}' was removed from Board '{BoardId}' by Requester '{RequesterId}'.",
+            membershipId, membership.BoardId, requesterId
+        );
+
+        return Result.Ok();
     }
 
     private async Task<Result<Domain.Entities.User.User>> GetUser(int userId)

@@ -10,3 +10,6 @@ public class BoardNotFoundError(int id)
 
 public class BoardMembershipAlreadyExistsError(int userId, int boardId)
     : Error($"User with id '{userId}' is already member of board with id: {boardId}.");
+
+public class BoardMembershipNotFoundError(int id)
+    : Error($"No board membership found with id: {id}.");
