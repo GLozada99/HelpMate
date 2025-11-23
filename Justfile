@@ -29,6 +29,16 @@ db-update:
 		--project src/Infrastructure \
 		--startup-project src/API
 
+
+db-reset:
+	dotnet ef database drop \
+		--project src/Infrastructure \
+		--startup-project src/API
+
+	dotnet ef database update \
+		--project src/Infrastructure \
+		--startup-project src/API
+
 api-run port="9090":
 	#!/usr/bin/env bash
 	dotnet run --project src/API --urls "http://localhost:{{port}}"
@@ -59,3 +69,7 @@ setup-logging:
 
 	echo
 	ls -l "$LOG_DIR"
+
+
+search-logs tracking_id log_path="/tmp/api.json":
+	cat {{log_path}} | jq 'select(.Properties.TrackingId=="{{tracking_id}}")'
