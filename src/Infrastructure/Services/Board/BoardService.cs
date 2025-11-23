@@ -143,9 +143,36 @@ public class BoardService(
     }
 
 
-    public Task<Result<IEnumerable<BoardDTO>>> GetBoards(int requesterId)
+    public async Task<Result<IEnumerable<BoardDTO>>> GetBoards(int requesterId)
     {
-        throw new NotImplementedException();
+        var boards = await context.BoardMemberships
+            .AsNoTracking()
+            .Where(m => m.UserId == requesterId)
+            .Include(m => m.Board)
+            .Select(m => m.Board!)
+            .ToListAsync();
+
+        if (boards.Count == 0)
+        {
+            logger.LogInformation(
+                "User '{RequesterId}' is not a member of any boards.",
+                requesterId
+            );
+
+            return Result.Ok(Enumerable.Empty<BoardDTO>());
+        }
+
+        var dtos = boards.Select(board => new BoardDTO(
+            board.Id,
+            board.Code,
+            board.Name,
+            board.Description,
+            board.CreatedById,
+            board.Status,
+            board.CreatedAt
+        ));
+
+        return Result.Ok(dtos);
     }
 
     public Task<Result<BoardDTO>> UpdateBoard(int boardId, UpdateBoardDTO dto,
