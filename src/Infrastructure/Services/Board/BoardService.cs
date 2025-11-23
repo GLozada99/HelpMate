@@ -309,11 +309,115 @@ public class BoardService(
         return Result.Ok();
     }
 
-    public Task<Result<BoardMembershipDTO>> CreateBoardMembership(int boardId,
-        CreateBoardMembershipDTO dto, int requesterId)
+    public async Task<Result<BoardMembershipDTO>> CreateBoardMembership(
+        int boardId,
+        CreateBoardMembershipDTO dto,
+        int requesterId)
     {
-        throw new NotImplementedException();
+        var board = await context.Boards
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == boardId);
+
+        if (board == null)
+        {
+            logger.LogWarning(
+                "Cannot create membership because Board '{BoardId}' does not exist.",
+                boardId
+            );
+            return Result.Fail<BoardMembershipDTO>(new BoardNotFoundError(boardId));
+        }
+
+        var requesterMembership = await context.BoardMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.BoardId == boardId &&
+                m.UserId == requesterId &&
+                m.Role == MembershipRole.Owner
+            );
+
+        if (requesterMembership == null)
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to add a membership to Board '{BoardId}' but either is not a member or  it is not an owner.",
+                requesterId, boardId
+            );
+            return Result.Fail<BoardMembershipDTO>(
+                new InsufficientUserPermissionsError(
+                    requesterId,
+                    $"Create membership in Board {boardId}"
+                )
+            );
+        }
+
+        var targetUser = await context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == dto.UserId);
+
+        if (targetUser == null)
+        {
+            logger.LogWarning(
+                "Cannot create membership because User '{UserId}' does not exist.",
+                dto.UserId
+            );
+            return Result.Fail<BoardMembershipDTO>(new UserNotFoundError(dto.UserId));
+        }
+
+        var existingMembership = await context.BoardMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.BoardId == boardId &&
+                m.UserId == dto.UserId
+            );
+
+        if (existingMembership != null)
+        {
+            logger.LogWarning(
+                "Cannot create membership because User '{UserId}' is already a member of Board '{BoardId}'.",
+                dto.UserId, boardId
+            );
+            return Result.Fail<BoardMembershipDTO>(
+                new BoardMembershipAlreadyExistsError(boardId, dto.UserId)
+            );
+        }
+
+        // If the user is SuperAdmin → always Owner
+        var role = targetUser.Role == UserRole.SuperAdmin
+            ? MembershipRole.Owner
+            : dto.Role;
+
+        var membership = new BoardMembership
+        {
+            BoardId = boardId,
+            UserId = dto.UserId,
+            Role = role
+        };
+
+        context.BoardMemberships.Add(membership);
+
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (saveResult.IsFailed)
+            return saveResult.ToResult<BoardMembershipDTO>();
+
+        var resultDto = new BoardMembershipDTO(
+            membership.Id,
+            membership.BoardId,
+            membership.UserId,
+            membership.Role,
+            membership.CreatedAt
+        );
+
+        logger.LogInformation(
+            "User '{UserId}' was added as '{Role}' to Board '{BoardId}' by Requester '{RequesterId}'.",
+            dto.UserId, role, boardId, requesterId
+        );
+
+        return Result.Ok(resultDto);
     }
+
 
     public Task<Result<IEnumerable<BoardMembershipDTO>>> GetBoardMemberships(
         int boardId, int requesterId)
