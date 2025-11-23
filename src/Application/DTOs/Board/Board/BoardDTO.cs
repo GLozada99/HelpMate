@@ -4,6 +4,7 @@ using Domain.Enums;
 namespace Application.DTOs.Board.Board;
 
 public class BoardDTO(
+    [Required] int Id,
     [Required] [StringLength(4)] string Code,
     [Required] string Name,
     [Required] string Description,
