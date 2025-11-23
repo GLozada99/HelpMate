@@ -126,8 +126,7 @@ public class UserController(
         For demonstration purposes only.<br/>
         MUST be removed in Production.
         """)]
-    [Authorize(Roles = "Admin,SuperAdmin")]
-    [HttpPost("/super-admin")]
+    [HttpPost("super-admin")]
     public async Task<ActionResult<ApiResponse<UserDTO>>> CreateSuperAdminUser(
         CreateUserDTO dto, HelpMateDbContext context)
     {
