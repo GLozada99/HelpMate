@@ -20,6 +20,7 @@ public static class CommonConfigs
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IApiResponseHelper, ApiResponseHelper>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IAuthService, AuthService>();
         return services;
     }
 

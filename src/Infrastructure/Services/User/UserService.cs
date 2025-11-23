@@ -20,7 +20,8 @@ public class UserService(
     {
         if (await GetUserByEmail(dto.Email) != null)
         {
-            logger.LogWarning("User with email '{Email}' already exists.",
+            logger.LogWarning(
+                "Can not create User with email '{Email}' because a user with that email already exists.",
                 dto.Email);
             return Result.Fail(new UserEmailAlreadyInUseError(dto.Email));
         }
@@ -83,7 +84,8 @@ public class UserService(
         if (dto.Email is not null)
             if (await GetUserByEmail(dto.Email) != null)
             {
-                logger.LogWarning("Registration failed — Email already exists: {Email}",
+                logger.LogWarning(
+                    "Can not update User email to '{Email}' because a user with that email already exists.",
                     dto.Email);
                 return Result.Fail(new UserEmailAlreadyInUseError(dto.Email));
             }
