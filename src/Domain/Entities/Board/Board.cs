@@ -14,7 +14,7 @@ public class Board : BaseEntity
     public required string Description { get; set; }
     public required BoardStatus Status { get; set; } = BoardStatus.Active;
 
-    [ForeignKey("User")] public required int CreatedById { get; set; }
+    [ForeignKey("User")] public int CreatedById { get; set; }
 
     public User.User? CreatedBy { get; set; }
 
