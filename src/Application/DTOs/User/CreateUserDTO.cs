@@ -1,13 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using Domain.Enums;
 
 namespace Application.DTOs.User;
-
-public enum CreateUserRole
-{
-    Admin,
-    Agent,
-    Customer
-}
 
 public record CreateUserDTO
 {

@@ -6,6 +6,11 @@ public enum BoardStatus
     Inactive
 }
 
+public enum UpdateBoardStatus
+{
+    Active
+}
+
 public enum MembershipRole
 {
     Viewer,

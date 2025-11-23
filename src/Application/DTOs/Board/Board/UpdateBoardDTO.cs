@@ -1,9 +1,6 @@
-namespace Application.DTOs.Board.Board;
+using Domain.Enums;
 
-public enum UpdateBoardStatus
-{
-    Active
-}
+namespace Application.DTOs.Board.Board;
 
 public record UpdateBoardDTO(
     string Name,
