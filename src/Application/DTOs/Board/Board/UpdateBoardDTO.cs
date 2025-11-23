@@ -1,4 +1,4 @@
-namespace Application.DTOs.Board;
+namespace Application.DTOs.Board.Board;
 
 public enum UpdateBoardStatus
 {

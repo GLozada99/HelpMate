@@ -32,12 +32,13 @@ public class UserControllerTests
         // Arrange
         var controller = CreateController();
 
-        var dto = new CreateUserDTO(
-            "test@example.com",
-            "Password1!",
-            "Test User",
-            CreateUserRole.Customer
-        );
+        var dto = new CreateUserDTO
+        {
+            Email = "test@example.com",
+            Password = "Password1!",
+            FullName = "Test User",
+            Role = CreateUserRole.Customer
+        };
 
         var userDto = new UserDTO(
             123,
@@ -75,12 +76,13 @@ public class UserControllerTests
         // Arrange
         var controller = CreateController();
 
-        var dto = new CreateUserDTO(
-            "used@example.com",
-            "Password1!",
-            "Used User",
-            CreateUserRole.Customer
-        );
+        var dto = new CreateUserDTO
+        {
+            Email = "test@example.com",
+            Password = "Password1!",
+            FullName = "Test User",
+            Role = CreateUserRole.Customer
+        };
 
         var error = new UserEmailAlreadyInUseError(dto.Email);
 

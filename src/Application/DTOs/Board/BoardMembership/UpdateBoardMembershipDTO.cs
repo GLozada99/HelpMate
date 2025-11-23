@@ -4,5 +4,5 @@ using Domain.Enums;
 namespace Application.DTOs.Board.BoardMembership;
 
 public record UpdateBoardMembershipDTO(
-    [Required] MembershipRole Role
+    MembershipRole Role
 );

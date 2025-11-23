@@ -9,9 +9,10 @@ public enum CreateUserRole
     Customer
 }
 
-public record CreateUserDTO(
-    [Required] [EmailAddress] string Email,
-    [Required] string Password,
-    [Required] string FullName,
-    [Required] CreateUserRole Role
-);
+public record CreateUserDTO
+{
+    [Required] [EmailAddress] public required string Email { get; init; }
+    [Required] [MinLength(1)] public required string Password { get; init; }
+    [Required] [MinLength(1)] public required string FullName { get; init; }
+    [Required] public required CreateUserRole Role { get; init; }
+}

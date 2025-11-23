@@ -4,11 +4,11 @@ using Domain.Enums;
 namespace Application.DTOs.Board.Board;
 
 public record BoardDTO(
-    [Required] int Id,
-    [Required] [StringLength(4)] string Code,
-    [Required] string Name,
-    [Required] string Description,
-    [Required] int CreatedById,
-    [Required] BoardStatus Status,
-    [Required] DateTime CreatedAt
+    int Id,
+    [StringLength(4)] string Code,
+    string Name,
+    string Description,
+    int CreatedById,
+    BoardStatus Status,
+    DateTime CreatedAt
 );
