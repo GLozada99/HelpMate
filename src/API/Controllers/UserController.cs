@@ -5,8 +5,6 @@ using Application.DTOs.User;
 using Application.Errors;
 using Application.Helpers.Pagination;
 using Application.Interfaces.User;
-using Domain.Enums;
-using Infrastructure.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NSwag.Annotations;
@@ -96,6 +94,7 @@ public class UserController(
         return error switch
         {
             UserNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
+            InsufficientPermissionError => ApiResponseHelper.Failure(errors, Conflict),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -116,41 +115,5 @@ public class UserController(
             var paginated = PaginationHelper.GetPaginatedResult(result.Value, dto);
             return ApiResponseHelper.Success(paginated, Ok);
         }
-    }
-
-    [OpenApiOperation("Create a SuperAdminUser.",
-        """
-        Endpoint to bypass having an initial user.<br/>
-        Does not required authentication.<br/>
-        The role provided will be ignored.<br/>
-        For demonstration purposes only.<br/>
-        MUST be removed in Production.
-        """)]
-    [HttpPost("super-admin")]
-    public async Task<ActionResult<ApiResponse<UserDTO>>> CreateSuperAdminUser(
-        CreateUserDTO dto, HelpMateDbContext context)
-    {
-        var result = await userService.CreateUser(dto);
-
-
-        if (result.IsSuccess)
-        {
-            (await context.Users.FindAsync(result.Value.Id))!.Role =
-                UserRole.SuperAdmin;
-            await context.SaveChangesAsync();
-
-            return ApiResponseHelper.Success(result.Value,
-                data => CreatedAtAction(nameof(GetUser), new { id = data.Result!.Id },
-                    data));
-        }
-
-        var error = result.Errors[0];
-        var errors = result.Errors.Select(e => e.Message).ToList();
-
-        return error switch
-        {
-            UserEmailAlreadyInUseError => ApiResponseHelper.Failure(errors, Conflict),
-            _ => ApiResponseHelper.Failure(errors, BadRequest)
-        };
     }
 }

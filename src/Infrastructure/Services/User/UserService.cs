@@ -122,20 +122,6 @@ public class UserService(
         return Result.Ok(resultDto);
     }
 
-    public async Task<Result> DeactivateUser(int id)
-    {
-        var user = await context.Users.FindAsync(id);
-        if (user == null)
-            return Result.Fail(new UserNotFoundError(id));
-
-        user.Status = UserStatus.Inactive;
-        var saveResult = await context.SaveChangesResultAsync(
-            logger,
-            () => new BaseError()
-        );
-        return saveResult.IsFailed ? saveResult : Result.Ok();
-    }
-
     public Task<Result<IQueryable<UserDTO>>> GetUsers(GetUserQueryDTO dto)
     {
         var dbQuery = context.Users.AsQueryable();
@@ -156,6 +142,23 @@ public class UserService(
         ));
 
         return Task.FromResult(Result.Ok(resultDTOs));
+    }
+
+    public async Task<Result> DeactivateUser(int id)
+    {
+        var user = await context.Users.FindAsync(id);
+        if (user == null)
+            return Result.Fail(new UserNotFoundError(id));
+
+        if (user.Role == UserRole.SuperAdmin)
+            return Result.Fail(new InsufficientPermissionError());
+
+        user.Status = UserStatus.Inactive;
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+        return saveResult.IsFailed ? saveResult : Result.Ok();
     }
 
     private UserRole MapRole(CreateUserRole role)
