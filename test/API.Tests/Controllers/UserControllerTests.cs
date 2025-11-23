@@ -185,6 +185,34 @@ public class UserControllerTests
     }
 
     [Fact]
+    public async Task DeactivateUser_WhenInsufficientPermission_ReturnsConflict()
+    {
+        // Arrange
+        var controller = CreateController();
+        const int userId = 123;
+
+        var error = new InsufficientPermissionError();
+
+        _userServiceMock
+            .Setup(s => s.DeactivateUser(userId))
+            .ReturnsAsync(error);
+
+        // Act
+        var result = await controller.DeactivateUser(userId);
+
+        // Assert
+        var conflict = result.Result.Should()
+            .BeOfType<ConflictObjectResult>()
+            .Subject;
+
+        var response = conflict.Value.Should()
+            .BeOfType<ApiResponse<object>>()
+            .Subject;
+
+        response.Errors.Should().Contain(error.Message);
+    }
+
+    [Fact]
     public async Task UpdateUser_WhenServiceSucceeds_ReturnsOk()
     {
         // Arrange
