@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Infrastructure.Context;
 
-public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : DbContext(options)
+public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options)
+    : DbContext(options)
 {
-
     public DbSet<User> Users { get; set; }
     public DbSet<Board> Boards { get; set; }
     public DbSet<BoardMembership> BoardMemberships { get; set; }
@@ -86,9 +86,9 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options) : Db
             .SetValueComparer(new ValueComparer<List<BoardMembership.MembershipRoles>>(
                 (l1, l2) =>
                     (l1 != null && l2 != null && l1.SequenceEqual(l2)) ||
-                     (l1 == null && l2 == null),
+                    (l1 == null && l2 == null),
                 l => l.GetHashCode()
-                ));
+            ));
 
         modelBuilder.Entity<Ticket>()
             .HasOne(t => t.CreatedBy)
