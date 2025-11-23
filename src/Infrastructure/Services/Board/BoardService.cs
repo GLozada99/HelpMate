@@ -1,7 +1,7 @@
-using Application.DTOs.Board;
 using Application.DTOs.Board.Board;
 using Application.DTOs.Board.BoardMembership;
 using Application.Errors;
+using Application.Helpers.Board;
 using Application.Interfaces.Board;
 using Domain.Entities.Board;
 using Domain.Enums;
@@ -19,26 +19,19 @@ public class BoardService(
 {
     public async Task<Result<BoardDTO>> CreateBoard(CreateBoardDTO dto, int userId)
     {
-        var userResult = await GetUser(userId);
-
-        if (userResult.IsFailed)
+        var user = await context.Users.FindAsync(userId);
+        if (user == null)
         {
             logger.LogWarning(
                 "Cannot create Board because User with Id '{UserId}' does not exist.",
                 userId
             );
-            return Result.Fail(userResult.Errors);
+            return Result.Fail<BoardDTO>(
+                new UserNotFoundError(userId));
         }
 
-        var userCanCreateBoardResult = ValidateUserCanCreateBoard(userResult.Value);
-        if (userCanCreateBoardResult.IsFailed)
-        {
-            logger.LogWarning(
-                "Cannot create Board because User with Id '{UserId}' does not have permissions for it.",
-                userId
-            );
-            return Result.Fail(userResult.Errors);
-        }
+        var canCreate = BoardRulesHelper.CanCreateBoard(user.Role);
+        if (canCreate.IsFailed) return Result.Fail(canCreate.Errors);
 
         var existingCode = await context.Boards
             .AsNoTracking()
@@ -81,7 +74,7 @@ public class BoardService(
         if (saveResult.IsFailed)
             return saveResult;
 
-        await SuperAdminMemberships(board.Id);
+        await SetSuperAdminMemberships(board.Id);
 
         var resultDTO = new BoardDTO(
             board.Id,
@@ -163,9 +156,9 @@ public class BoardService(
         var membershipResult = await GetUserMembership(boardId, requesterId);
         if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var ownershipResult =
-            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
-        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
+        var canUpdate =
+            BoardRulesHelper.CanUpdateBoard(membershipResult.Value.Role);
+        if (canUpdate.IsFailed) return Result.Fail(canUpdate.Errors);
 
         if (dto.Name != board.Name)
             board.Name = dto.Name;
@@ -212,9 +205,9 @@ public class BoardService(
         var membershipResult = await GetUserMembership(boardId, requesterId);
         if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var ownershipResult =
-            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
-        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
+        var canDeactivate =
+            BoardRulesHelper.CanDeactivateBoard(membershipResult.Value.Role);
+        if (canDeactivate.IsFailed) return Result.Fail(canDeactivate.Errors);
 
         if (board.Status == BoardStatus.Inactive)
         {
@@ -252,9 +245,9 @@ public class BoardService(
         var membershipResult = await GetUserMembership(boardId, requesterId);
         if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var ownershipResult =
-            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
-        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
+        var canCreate =
+            BoardRulesHelper.CanCreateMembership(membershipResult.Value.Role);
+        if (canCreate.IsFailed) return Result.Fail(canCreate.Errors);
 
         var targetUser = await context.Users
             .AsNoTracking()
@@ -340,8 +333,8 @@ public class BoardService(
             );
 
             return Result.Fail<IEnumerable<BoardMembershipDTO>>(
-                new InsufficientUserPermissionsError(
-                    requesterId,
+                new InsufficientUserMembershipError(
+                    "N/A",
                     $"View memberships for Board {boardId}"
                 )
             );
@@ -386,9 +379,9 @@ public class BoardService(
         var membershipResult = await GetUserMembership(membership.BoardId, requesterId);
         if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var ownershipResult =
-            CheckOwnership(membershipResult.Value, "Update board (must be owner)");
-        if (ownershipResult.IsFailed) return Result.Fail(ownershipResult.Errors);
+        var canUpdate =
+            BoardRulesHelper.CanUpdateMembership(membershipResult.Value.Role);
+        if (canUpdate.IsFailed) return Result.Fail(canUpdate.Errors);
 
         membership.Role = dto.Role;
 
@@ -430,53 +423,26 @@ public class BoardService(
             return Result.Fail(new BoardMembershipNotFoundError(membershipId));
         }
 
-        var requesterMembership = await context.BoardMemberships
+        var membershipResult = await GetUserMembership(membership.BoardId, requesterId);
+        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
+
+        var canRemove =
+            BoardRulesHelper.CanRemoveMembership(membershipResult.Value.Role);
+        if (canRemove.IsFailed) return Result.Fail(canRemove.Errors);
+
+        var ownersCount = await context.BoardMemberships
             .AsNoTracking()
-            .FirstOrDefaultAsync(m =>
+            .CountAsync(m =>
                 m.BoardId == membership.BoardId &&
-                m.UserId == requesterId &&
                 m.Role == MembershipRole.Owner
             );
+        var canRemoveLast =
+            BoardRulesHelper.CanRemoveMembershipConsideringLastOwner(
+                membership.Role, ownersCount);
+        if (canRemoveLast.IsFailed) return Result.Fail(canRemoveLast.Errors);
 
-        if (requesterMembership == null)
-        {
-            logger.LogWarning(
-                "User '{RequesterId}' attempted to remove membership '{MembershipId}' from Board '{BoardId}' but is not a member.",
-                requesterId, membershipId, membership.BoardId
-            );
-            return Result.Fail(new InsufficientUserPermissionsError(
-                requesterId,
-                $"Remove BoardMembership {membershipId}"
-            ));
-        }
-
-        if (membership.Role == MembershipRole.Owner)
-        {
-            var ownersCount = await context.BoardMemberships
-                .AsNoTracking()
-                .CountAsync(m =>
-                    m.BoardId == membership.BoardId &&
-                    m.Role == MembershipRole.Owner
-                );
-
-            if (ownersCount <= 1)
-            {
-                logger.LogWarning(
-                    "Cannot remove membership '{MembershipId}' — it is the last Owner in Board '{BoardId}'.",
-                    membershipId, membership.BoardId
-                );
-
-                return Result.Fail(new InsufficientUserPermissionsError(
-                    requesterId,
-                    $"Remove last Owner from Board {membership.BoardId}"
-                ));
-            }
-        }
-
-        // --- 7. Remove membership ---
         context.BoardMemberships.Remove(membership);
 
-        // --- 8. Save changes ---
         var saveResult = await context.SaveChangesResultAsync(
             logger,
             () => new BaseError()
@@ -493,28 +459,7 @@ public class BoardService(
         return Result.Ok();
     }
 
-    private async Task<Result<Domain.Entities.User.User>> GetUser(int userId)
-    {
-        var user = await context.Users.FindAsync(userId);
-
-        if (user == null)
-            return Result.Fail<Domain.Entities.User.User>(
-                new UserNotFoundError(userId));
-
-        return Result.Ok(user);
-    }
-
-    private Result ValidateUserCanCreateBoard(
-        Domain.Entities.User.User user)
-    {
-        if (!user.CanCreateBoards)
-            return Result.Fail(
-                new InsufficientUserPermissionsError(user.Id, "CreateBoard"));
-
-        return Result.Ok();
-    }
-
-    private async Task<Result> SuperAdminMemberships(int boardId)
+    private async Task<Result> SetSuperAdminMemberships(int boardId)
     {
         var superAdmins = await context.Users
             .AsNoTracking()
@@ -614,22 +559,9 @@ public class BoardService(
         );
 
         return Result.Fail<BoardMembership>(
-            new InsufficientUserPermissionsError(
-                requesterId,
+            new InsufficientUserMembershipError(
+                "N/A",
                 $"Access Board {boardId}"
-            )
-        );
-    }
-
-    private static Result CheckOwnership(BoardMembership boardMembership,
-        string errorMessage)
-    {
-        if (boardMembership.Role == MembershipRole.Owner) return Result.Ok();
-
-        return Result.Fail(
-            new InsufficientUserPermissionsError(
-                boardMembership.UserId,
-                errorMessage
             )
         );
     }

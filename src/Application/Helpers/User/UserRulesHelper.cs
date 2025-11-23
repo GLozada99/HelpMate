@@ -15,7 +15,7 @@ public static class UserRulesHelper
             (UserRole.Admin, var role) when role != UserRole.SuperAdmin => Result.Ok(),
 
             _ => Result.Fail(
-                new InsufficientUserRoleError(
+                new InsufficientUserPermissionsError(
                     requesterRole.ToString(),
                     $"Create '{newUserRole}' User"))
         };
@@ -30,7 +30,7 @@ public static class UserRulesHelper
             (UserRole.Admin, var role) when role != UserRole.SuperAdmin => Result.Ok(),
 
             _ => Result.Fail(
-                new InsufficientUserRoleError(
+                new InsufficientUserPermissionsError(
                     requesterRole.ToString(),
                     $"Update '{targetUserRole}' User"))
         };
@@ -47,16 +47,17 @@ public static class UserRulesHelper
 
             (UserRole.Admin, UserRole.SuperAdmin, _) =>
                 Result.Fail(
-                    new InsufficientUserRoleError("Admin", "Modify SuperAdmin")),
+                    new InsufficientUserPermissionsError("Admin", "Modify SuperAdmin")),
 
             (UserRole.Admin, _, UserRole.SuperAdmin) =>
                 Result.Fail(
-                    new InsufficientUserRoleError("Admin", "Assign SuperAdmin role")),
+                    new InsufficientUserPermissionsError("Admin",
+                        "Assign SuperAdmin role")),
 
             (UserRole.Admin, _, _) => Result.Ok(),
 
             _ => Result.Fail(
-                new InsufficientUserRoleError(
+                new InsufficientUserPermissionsError(
                     requesterRole.ToString(),
                     $"Update role for '{currentUserRole}' User"))
         };
@@ -72,7 +73,7 @@ public static class UserRulesHelper
             (UserRole.Admin, var role) when role != UserRole.SuperAdmin => Result.Ok(),
 
             _ => Result.Fail(
-                new InsufficientUserRoleError(
+                new InsufficientUserPermissionsError(
                     requesterRole.ToString(),
                     $"Deactivate '{targetUserRole}' User"))
         };
