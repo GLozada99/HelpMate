@@ -8,9 +8,9 @@ namespace API.Helpers.Response;
 public class ApiResponseHelper(ITrackingIdProvider trackingIdProvider)
     : IApiResponseHelper
 {
-    public ObjectResult Failure(
+    public ActionResult Failure(
         List<string>? errors,
-        Func<object, ObjectResult> responseBuilder,
+        Func<object, ActionResult> responseBuilder,
         List<string>? messages = null)
     {
         var wrapped =
@@ -21,7 +21,7 @@ public class ApiResponseHelper(ITrackingIdProvider trackingIdProvider)
 
     public ActionResult<ApiResponse<T>> Success<T>(
         T? result,
-        Func<ApiResponse<T>, ObjectResult> responseBuilder,
+        Func<ApiResponse<T>, ActionResult> responseBuilder,
         List<string>? messages = null
     )
     {
