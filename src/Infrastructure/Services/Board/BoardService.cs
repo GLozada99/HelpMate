@@ -17,41 +17,24 @@ public class BoardService(
     ILogger<BoardService> logger
 ) : IBoardService
 {
-    public async Task<Result<BoardDTO>> CreateBoard(CreateBoardDTO dto, int userId)
+    public async Task<Result<BoardDTO>> CreateBoard(CreateBoardDTO dto, int requesterId)
     {
-        var user = await context.Users.FindAsync(userId);
-        if (user == null)
-        {
-            logger.LogWarning(
-                "Cannot create Board because User with Id '{UserId}' does not exist.",
-                userId
-            );
-            return Result.Fail<BoardDTO>(
-                new UserNotFoundError(userId));
-        }
+        var userResult = await GetUser(requesterId, false);
+        if (userResult.IsFailed) return Result.Fail(userResult.Errors);
 
-        var canCreate = BoardRulesHelper.CanCreateBoard(user.Role);
+        var canCreate = BoardRulesHelper.CanCreateBoard(userResult.Value.Role);
         if (canCreate.IsFailed) return Result.Fail(canCreate.Errors);
 
-        var existingCode = await context.Boards
-            .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.Code == dto.Code);
-
-        if (existingCode != null)
-        {
-            logger.LogWarning(
-                "Cannot create Board with code '{Code}' because another board already exists with that code.",
-                dto.Code
-            );
-            return Result.Fail(new BoardCodeAlreadyExistsError(dto.Code));
-        }
+        var duplicateExists =
+            BoardRulesHelper.BoardWithCodeExists(dto.Code, context.Boards);
+        if (duplicateExists.IsFailed) return Result.Fail(duplicateExists.Errors);
 
         var board = new Domain.Entities.Board.Board
         {
             Code = dto.Code,
             Name = dto.Name,
             Description = dto.Description,
-            CreatedById = userId,
+            CreatedById = requesterId,
             Status = BoardStatus.Active
         };
 
@@ -60,7 +43,7 @@ public class BoardService(
         var membership = new BoardMembership
         {
             Board = board,
-            UserId = userId,
+            UserId = requesterId,
             Role = MembershipRole.Owner
         };
 
@@ -249,18 +232,9 @@ public class BoardService(
             BoardRulesHelper.CanCreateMembership(membershipResult.Value.Role);
         if (canCreate.IsFailed) return Result.Fail(canCreate.Errors);
 
-        var targetUser = await context.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == dto.UserId);
-
-        if (targetUser == null)
-        {
-            logger.LogWarning(
-                "Cannot create membership because User '{UserId}' does not exist.",
-                dto.UserId
-            );
-            return Result.Fail<BoardMembershipDTO>(new UserNotFoundError(dto.UserId));
-        }
+        var targetUserResult = await GetUser(dto.UserId, false);
+        if (targetUserResult.IsFailed) return Result.Fail(targetUserResult.Errors);
+        var targetUser = targetUserResult.Value;
 
         var userMembershipResult = await GetUserMembership(boardId, dto.UserId);
         if (userMembershipResult.IsSuccess)
@@ -544,6 +518,23 @@ public class BoardService(
         return Result.Fail<Domain.Entities.Board.Board>(
             new BoardNotFoundError(boardId)
         );
+    }
+
+    private async Task<Result<Domain.Entities.User.User>> GetUser(int userId,
+        bool track = true)
+    {
+        var user = track
+            ? await context.Users.FindAsync(userId)
+            : await context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user != null) return Result.Ok(user);
+        logger.LogWarning(
+            "Cannot create Board because User with Id '{UserId}' does not exist.",
+            userId
+        );
+        return Result.Fail<Domain.Entities.User.User>(
+            new UserNotFoundError(userId));
     }
 
     private async Task<Result<BoardMembership>>

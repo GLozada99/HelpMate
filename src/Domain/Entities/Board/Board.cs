@@ -12,7 +12,7 @@ public class Board : BaseEntity
 
     public required string Name { get; set; }
     public required string Description { get; set; }
-    public required BoardStatus Status { get; set; } = BoardStatus.Active;
+    public BoardStatus Status { get; set; } = BoardStatus.Active;
 
     [ForeignKey("User")] public int CreatedById { get; set; }
 

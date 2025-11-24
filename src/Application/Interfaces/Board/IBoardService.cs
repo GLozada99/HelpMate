@@ -1,4 +1,3 @@
-using Application.DTOs.Board;
 using Application.DTOs.Board.Board;
 using Application.DTOs.Board.BoardMembership;
 using FluentResults;
@@ -7,7 +6,7 @@ namespace Application.Interfaces.Board;
 
 public interface IBoardService
 {
-    Task<Result<BoardDTO>> CreateBoard(CreateBoardDTO dto, int userId);
+    Task<Result<BoardDTO>> CreateBoard(CreateBoardDTO dto, int requesterId);
     Task<Result<BoardDTO>> GetBoard(int boardId, int requesterId);
     Task<Result<IEnumerable<BoardDTO>>> GetBoards(int requesterId);
 

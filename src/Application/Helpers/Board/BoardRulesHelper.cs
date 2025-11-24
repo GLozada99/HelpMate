@@ -22,7 +22,7 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserPermissionsError(
+            : Result.Fail(new InsufficientUserMembershipError(
                 requesterMembershipRole.ToString(),
                 "Update Board"));
     }
@@ -31,7 +31,7 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserPermissionsError(
+            : Result.Fail(new InsufficientUserMembershipError(
                 requesterMembershipRole.ToString(),
                 "Deactivate Board"));
     }
@@ -40,7 +40,7 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserPermissionsError(
+            : Result.Fail(new InsufficientUserMembershipError(
                 requesterMembershipRole.ToString(),
                 "Create Board Membership"));
     }
@@ -49,7 +49,7 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserPermissionsError(
+            : Result.Fail(new InsufficientUserMembershipError(
                 requesterMembershipRole.ToString(),
                 "Update Board Membership"));
     }
@@ -58,7 +58,7 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserPermissionsError(
+            : Result.Fail(new InsufficientUserMembershipError(
                 requesterMembershipRole.ToString(),
                 "Remove Board Membership"));
     }
@@ -72,6 +72,15 @@ public static class BoardRulesHelper
 
         return ownersCount > 1
             ? Result.Ok()
-            : Result.Fail("Cannot remove last owner of the board");
+            : Result.Fail(
+                new InvalidBoardState("Cannot remove last owner of the board"));
+    }
+
+    public static Result BoardWithCodeExists(string boardCode,
+        IQueryable<Domain.Entities.Board.Board> boards)
+    {
+        return boards.Any(b => b.Code == boardCode)
+            ? Result.Fail(new BoardCodeAlreadyExistsError(boardCode))
+            : Result.Ok();
     }
 }

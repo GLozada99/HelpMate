@@ -36,7 +36,7 @@ public class BoardController(
 
         return error switch
         {
-            UserNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
+            UserNotFoundError => ApiResponseHelper.Failure(errors, BadRequest),
             BoardCodeAlreadyExistsError => ApiResponseHelper.Failure(errors, Conflict),
             InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
@@ -59,7 +59,7 @@ public class BoardController(
         return error switch
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -96,7 +96,7 @@ public class BoardController(
         return error switch
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -117,7 +117,7 @@ public class BoardController(
         return error switch
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -143,10 +143,10 @@ public class BoardController(
         return error switch
         {
             UserNotFoundError or BoardNotFoundError => ApiResponseHelper.Failure(errors,
-                NotFound),
+                BadRequest),
             BoardMembershipAlreadyExistsError => ApiResponseHelper.Failure(errors,
                 Conflict),
-            InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -169,7 +169,7 @@ public class BoardController(
         return error switch
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -192,9 +192,11 @@ public class BoardController(
 
         return error switch
         {
-            BoardMembershipNotFoundError or UserNotFoundError => ApiResponseHelper
+            UserNotFoundError => ApiResponseHelper.Failure(errors,
+                BadRequest),
+            BoardMembershipNotFoundError => ApiResponseHelper
                 .Failure(errors, NotFound),
-            InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -216,8 +218,11 @@ public class BoardController(
 
         return error switch
         {
-            BoardMembershipNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
+            UserNotFoundError => ApiResponseHelper.Failure(errors,
+                BadRequest),
+            BoardMembershipNotFoundError => ApiResponseHelper
+                .Failure(errors, NotFound),
+            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
                 _ => Forbid()),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
