@@ -5,14 +5,14 @@ namespace API.Interfaces.Response;
 
 public interface IApiResponseHelper
 {
-    ObjectResult Failure(
+    ActionResult Failure(
         List<string>? errors,
-        Func<object, ObjectResult> responseBuilder,
+        Func<object, ActionResult> responseBuilder,
         List<string>? messages = null);
 
     ActionResult<ApiResponse<T>> Success<T>(
         T? result,
-        Func<ApiResponse<T>, ObjectResult> responseBuilder,
+        Func<ApiResponse<T>, ActionResult> responseBuilder,
         List<string>? messages = null
     );
 }

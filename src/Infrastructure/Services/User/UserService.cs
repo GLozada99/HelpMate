@@ -1,5 +1,6 @@
 using Application.DTOs.User;
 using Application.Errors;
+using Application.Helpers.User;
 using Application.Interfaces.Auth;
 using Application.Interfaces.User;
 using Domain.Enums;
@@ -16,45 +17,6 @@ public class UserService(
     IPasswordHasher passwordHasher)
     : IUserService
 {
-    public async Task<Result<UserDTO>> CreateUser(CreateUserDTO dto)
-    {
-        if (await GetUserByEmail(dto.Email) != null)
-        {
-            logger.LogWarning(
-                "Can not create User with email '{Email}' because a user with that email already exists.",
-                dto.Email);
-            return Result.Fail(new UserEmailAlreadyInUseError(dto.Email));
-        }
-
-        var user = new Domain.Entities.User.User
-        {
-            Email = dto.Email,
-            Password = passwordHasher.HashPassword(dto.Password),
-            FullName = dto.FullName,
-            Status = UserStatus.Active,
-            Role = MapRole(dto.Role)
-        };
-        context.Users.Add(user);
-
-        var saveResult = await context.SaveChangesResultAsync(
-            logger,
-            () => new BaseError()
-        );
-        if (saveResult.IsFailed)
-            return saveResult;
-
-        var resultDto = new UserDTO(
-            user.Id,
-            user.Email,
-            user.FullName,
-            user.Role,
-            user.Status,
-            user.CreatedAt
-        );
-
-        return Result.Ok(resultDto);
-    }
-
     public async Task<Result<UserDTO>> GetUser(int id)
     {
         var user = await context.Users.FindAsync(id);
@@ -74,12 +36,21 @@ public class UserService(
         return Result.Ok(resultDto);
     }
 
-    public async Task<Result<UserDTO>> UpdateUser(int id, UpdateUserDTO dto)
+    public async Task<Result<UserDTO>> UpdateUser(int id, UpdateUserDTO dto,
+        int requesterId)
     {
         var user = await context.Users.FindAsync(id);
 
         if (user == null)
             return Result.Fail<UserDTO>(new UserNotFoundError(id));
+
+        var requester = await context.Users.FindAsync(requesterId);
+        if (requester == null)
+            return Result.Fail<UserDTO>(new UserNotFoundError(requesterId));
+
+        var canUpdate =
+            UserRulesHelper.CanUpdateUser(requester.Role, user.Role);
+        if (canUpdate.IsFailed) return Result.Fail<UserDTO>(canUpdate.Errors);
 
         if (dto.Email is not null)
             if (await GetUserByEmail(dto.Email) != null)
@@ -87,7 +58,7 @@ public class UserService(
                 logger.LogWarning(
                     "Can not update User email to '{Email}' because a user with that email already exists.",
                     dto.Email);
-                return Result.Fail(new UserEmailAlreadyInUseError(dto.Email));
+                return Result.Fail<UserDTO>(new UserEmailAlreadyInUseError(dto.Email));
             }
             else if (user.Email != dto.Email)
             {
@@ -98,7 +69,16 @@ public class UserService(
             user.FullName = dto.FullName;
 
         if (dto.Role is not null)
-            user.Role = MapRole((UpdateUserRole)dto.Role);
+        {
+            var newRole = UserRulesHelper.MapRole(dto.Role.Value);
+
+            var canUpdateUserRole =
+                UserRulesHelper.CanUpdateUserRole(requester.Role, user.Role, newRole);
+            if (canUpdateUserRole.IsFailed)
+                return Result.Fail(canUpdateUserRole.Errors);
+
+            user.Role = newRole;
+        }
 
         if (dto.Status == UpdateUserStatus.Active)
             user.Status = UserStatus.Active;
@@ -144,14 +124,19 @@ public class UserService(
         return Task.FromResult(Result.Ok(resultDTOs));
     }
 
-    public async Task<Result> DeactivateUser(int id)
+    public async Task<Result> DeactivateUser(int id, int requesterId)
     {
         var user = await context.Users.FindAsync(id);
         if (user == null)
             return Result.Fail(new UserNotFoundError(id));
 
-        if (user.Role == UserRole.SuperAdmin)
-            return Result.Fail(new InsufficientPermissionError());
+        var requester = await context.Users.FindAsync(requesterId);
+        if (requester == null)
+            return Result.Fail(new UserNotFoundError(requesterId));
+
+        var canDeactivate =
+            UserRulesHelper.CanDeactivateUser(requester.Role, user.Role);
+        if (canDeactivate.IsFailed) return Result.Fail(canDeactivate.Errors);
 
         user.Status = UserStatus.Inactive;
         var saveResult = await context.SaveChangesResultAsync(
@@ -161,26 +146,52 @@ public class UserService(
         return saveResult.IsFailed ? saveResult : Result.Ok();
     }
 
-    private UserRole MapRole(CreateUserRole role)
+    public async Task<Result<UserDTO>> CreateUser(CreateUserDTO dto, int requesterId)
     {
-        return role switch
+        if (await GetUserByEmail(dto.Email) != null)
         {
-            CreateUserRole.Customer => UserRole.Customer,
-            CreateUserRole.Agent => UserRole.Agent,
-            CreateUserRole.Admin => UserRole.Admin,
-            _ => throw new ArgumentOutOfRangeException(nameof(role))
-        };
-    }
+            logger.LogWarning(
+                "Can not create User with email '{Email}' because a user with that email already exists.",
+                dto.Email);
+            return Result.Fail(new UserEmailAlreadyInUseError(dto.Email));
+        }
 
-    private UserRole MapRole(UpdateUserRole role)
-    {
-        return role switch
+        var requester = await context.Users.FindAsync(requesterId);
+        if (requester == null)
+            return Result.Fail<UserDTO>(new UserNotFoundError(requesterId));
+
+        var newRole = UserRulesHelper.MapRole(dto.Role);
+        var canCreate = UserRulesHelper.CanCreateUser(requester.Role, newRole);
+
+        if (canCreate.IsFailed) return Result.Fail<UserDTO>(canCreate.Errors);
+
+        var user = new Domain.Entities.User.User
         {
-            UpdateUserRole.Customer => UserRole.Customer,
-            UpdateUserRole.Agent => UserRole.Agent,
-            UpdateUserRole.Admin => UserRole.Admin,
-            _ => throw new ArgumentOutOfRangeException(nameof(role))
+            Email = dto.Email,
+            Password = passwordHasher.HashPassword(dto.Password),
+            FullName = dto.FullName,
+            Status = UserStatus.Active,
+            Role = newRole
         };
+        context.Users.Add(user);
+
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+        if (saveResult.IsFailed)
+            return saveResult;
+
+        var resultDto = new UserDTO(
+            user.Id,
+            user.Email,
+            user.FullName,
+            user.Role,
+            user.Status,
+            user.CreatedAt
+        );
+
+        return Result.Ok(resultDto);
     }
 
     private async Task<Domain.Entities.User.User?> GetUserByEmail(string email)

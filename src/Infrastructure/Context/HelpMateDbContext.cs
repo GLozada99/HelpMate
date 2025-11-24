@@ -3,7 +3,6 @@ using Domain.Entities.Board;
 using Domain.Entities.Ticket;
 using Domain.Entities.User;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Infrastructure.Context;
 
@@ -76,19 +75,8 @@ public class HelpMateDbContext(DbContextOptions<HelpMateDbContext> options)
             .HasConversion<string>();
 
         modelBuilder.Entity<BoardMembership>()
-            .Property(b => b.Roles)
-            .HasConversion(
-                v => v.Select(r => r.ToString()).ToArray(),
-                v => v.Select(Enum.Parse<BoardMembership.MembershipRoles>).ToList()
-            )
-            .HasColumnType("text[]")
-            .Metadata
-            .SetValueComparer(new ValueComparer<List<BoardMembership.MembershipRoles>>(
-                (l1, l2) =>
-                    (l1 != null && l2 != null && l1.SequenceEqual(l2)) ||
-                    (l1 == null && l2 == null),
-                l => l.GetHashCode()
-            ));
+            .Property(b => b.Role)
+            .HasConversion<string>();
 
         modelBuilder.Entity<Ticket>()
             .HasOne(t => t.CreatedBy)

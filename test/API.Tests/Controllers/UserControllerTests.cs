@@ -1,6 +1,7 @@
 using API.Controllers;
 using API.Helpers.Response;
 using API.Interfaces.Response;
+using API.Tests.Helpers;
 using Application.DTOs.Shared;
 using Application.DTOs.User;
 using Application.Errors;
@@ -31,13 +32,15 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
 
-        var dto = new CreateUserDTO(
-            "test@example.com",
-            "Password1!",
-            "Test User",
-            CreateUserRole.Customer
-        );
+        var dto = new CreateUserDTO
+        {
+            Email = "test@example.com",
+            Password = "Password1!",
+            FullName = "Test User",
+            Role = CreateUserRole.Customer
+        };
 
         var userDto = new UserDTO(
             123,
@@ -49,7 +52,7 @@ public class UserControllerTests
         );
 
         _userServiceMock
-            .Setup(s => s.CreateUser(dto))
+            .Setup(s => s.CreateUser(dto, user.Id))
             .ReturnsAsync(Result.Ok(userDto));
 
         // Act
@@ -66,7 +69,7 @@ public class UserControllerTests
 
         response.Result.Should().BeEquivalentTo(userDto);
 
-        _userServiceMock.Verify(s => s.CreateUser(dto), Times.Once);
+        _userServiceMock.Verify(s => s.CreateUser(dto, user.Id), Times.Once);
     }
 
     [Fact]
@@ -74,18 +77,20 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
 
-        var dto = new CreateUserDTO(
-            "used@example.com",
-            "Password1!",
-            "Used User",
-            CreateUserRole.Customer
-        );
+        var dto = new CreateUserDTO
+        {
+            Email = "test@example.com",
+            Password = "Password1!",
+            FullName = "Test User",
+            Role = CreateUserRole.Customer
+        };
 
         var error = new UserEmailAlreadyInUseError(dto.Email);
 
         _userServiceMock
-            .Setup(s => s.CreateUser(dto))
+            .Setup(s => s.CreateUser(dto, user.Id))
             .ReturnsAsync(Result.Fail<UserDTO>(error));
 
         // Act
@@ -171,10 +176,11 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
         _userServiceMock
-            .Setup(s => s.DeactivateUser(userId))
+            .Setup(s => s.DeactivateUser(userId, user.Id))
             .ReturnsAsync(Result.Ok());
 
         // Act
@@ -189,12 +195,13 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
         var error = new InsufficientPermissionError();
 
         _userServiceMock
-            .Setup(s => s.DeactivateUser(userId))
+            .Setup(s => s.DeactivateUser(userId, user.Id))
             .ReturnsAsync(error);
 
         // Act
@@ -217,6 +224,7 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
         var dto = new UpdateUserDTO(
@@ -236,7 +244,7 @@ public class UserControllerTests
         );
 
         _userServiceMock
-            .Setup(s => s.UpdateUser(userId, dto))
+            .Setup(s => s.UpdateUser(userId, dto, user.Id))
             .ReturnsAsync(Result.Ok(updatedUser));
 
         // Act
@@ -253,7 +261,7 @@ public class UserControllerTests
 
         response.Result.Should().BeEquivalentTo(updatedUser);
 
-        _userServiceMock.Verify(s => s.UpdateUser(userId, dto), Times.Once);
+        _userServiceMock.Verify(s => s.UpdateUser(userId, dto, user.Id), Times.Once);
     }
 
     [Fact]
@@ -261,6 +269,7 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
         var dto = new UpdateUserDTO(
@@ -273,7 +282,7 @@ public class UserControllerTests
         var error = new UserNotFoundError(userId);
 
         _userServiceMock
-            .Setup(s => s.UpdateUser(userId, dto))
+            .Setup(s => s.UpdateUser(userId, dto, user.Id))
             .ReturnsAsync(Result.Fail<UserDTO>(error));
 
         // Act
@@ -290,7 +299,7 @@ public class UserControllerTests
 
         response.Errors.Should().Contain(error.Message);
 
-        _userServiceMock.Verify(s => s.UpdateUser(userId, dto), Times.Once);
+        _userServiceMock.Verify(s => s.UpdateUser(userId, dto, user.Id), Times.Once);
     }
 
     [Fact]
@@ -298,6 +307,7 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
         var dto = new UpdateUserDTO(
@@ -310,7 +320,7 @@ public class UserControllerTests
         var error = new UserEmailAlreadyInUseError(dto.Email!);
 
         _userServiceMock
-            .Setup(s => s.UpdateUser(userId, dto))
+            .Setup(s => s.UpdateUser(userId, dto, user.Id))
             .ReturnsAsync(Result.Fail<UserDTO>(error));
 
         // Act
@@ -327,7 +337,7 @@ public class UserControllerTests
 
         response.Errors.Should().Contain(error.Message);
 
-        _userServiceMock.Verify(s => s.UpdateUser(userId, dto), Times.Once);
+        _userServiceMock.Verify(s => s.UpdateUser(userId, dto, user.Id), Times.Once);
     }
 
     [Fact]
@@ -335,12 +345,13 @@ public class UserControllerTests
     {
         // Arrange
         var controller = CreateController();
+        var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
         var error = new UserNotFoundError(userId);
 
         _userServiceMock
-            .Setup(s => s.DeactivateUser(userId))
+            .Setup(s => s.DeactivateUser(userId, user.Id))
             .ReturnsAsync(Result.Fail(error));
 
         // Act

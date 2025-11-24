@@ -6,6 +6,8 @@ namespace API.Controllers;
 
 public class BaseController(IApiResponseHelper apiResponseHelper) : ControllerBase
 {
+    protected int UserId => GetUserId();
+
     protected IApiResponseHelper ApiResponseHelper => apiResponseHelper;
 
     protected int GetUserId()

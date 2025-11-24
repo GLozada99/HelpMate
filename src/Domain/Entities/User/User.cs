@@ -10,7 +10,7 @@ public class User : BaseEntity
     public required string Email { get; set; }
     public required string Password { get; set; }
     public required string FullName { get; set; }
-    public required UserStatus Status { get; set; } = UserStatus.Active;
+    public UserStatus Status { get; set; } = UserStatus.Active;
 
     public required UserRole Role { get; set; }
 
@@ -21,4 +21,7 @@ public class User : BaseEntity
     public List<Ticket.Ticket> WatchingTickets { get; } = [];
 
     public bool IsActive => Status == UserStatus.Active;
+
+    public bool CanCreateBoards =>
+        IsActive && Role is UserRole.Admin or UserRole.SuperAdmin;
 }

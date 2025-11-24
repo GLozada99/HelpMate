@@ -2,12 +2,14 @@ using API.Helpers.Response;
 using API.Interfaces.Response;
 using API.Services.Tracking;
 using Application.Interfaces.Auth;
+using Application.Interfaces.Board;
 using Application.Interfaces.Tracking;
 using Application.Interfaces.User;
 using Domain.Entities.User;
 using Domain.Enums;
 using Infrastructure.Context;
 using Infrastructure.Services.Auth;
+using Infrastructure.Services.Board;
 using Infrastructure.Services.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +23,7 @@ public static class CommonConfigs
         services.AddSingleton<ITrackingIdProvider, TrackingIdProvider>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IApiResponseHelper, ApiResponseHelper>();
+        services.AddScoped<IBoardService, BoardService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();
         return services;

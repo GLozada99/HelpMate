@@ -1,22 +1,10 @@
-using System.ComponentModel.DataAnnotations;
+using Domain.Enums;
 
 namespace Application.DTOs.User;
 
-public enum UpdateUserRole
-{
-    Admin,
-    Agent,
-    Customer
-}
-
-public enum UpdateUserStatus
-{
-    Active
-}
-
 public record UpdateUserDTO(
-    [EmailAddress] [MinLength(5)] string? Email,
-    [MinLength(1)] string? FullName,
+    string? Email,
+    string? FullName,
     UpdateUserRole? Role,
     UpdateUserStatus? Status
 );
