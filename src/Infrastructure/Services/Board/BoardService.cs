@@ -95,23 +95,24 @@ public class BoardService(
     }
 
 
-    public async Task<Result<IEnumerable<BoardDTO>>> GetBoards(int requesterId)
+    public Task<Result<IQueryable<BoardDTO>>> GetBoards(int requesterId)
     {
-        var boards = await context.BoardMemberships
+        var boards = context.BoardMemberships
             .AsNoTracking()
             .Where(m => m.UserId == requesterId)
             .Include(m => m.Board)
             .Select(m => m.Board!)
-            .ToListAsync();
+            .AsQueryable();
 
-        if (boards.Count == 0)
+        if (!boards.Any())
         {
             logger.LogInformation(
                 "User '{RequesterId}' is not a member of any boards.",
                 requesterId
             );
 
-            return Result.Ok(Enumerable.Empty<BoardDTO>());
+            return Task.FromResult(
+                Result.Ok(Enumerable.Empty<BoardDTO>().AsQueryable()));
         }
 
         var dtos = boards.Select(board => new BoardDTO(
@@ -124,7 +125,7 @@ public class BoardService(
             board.CreatedAt
         ));
 
-        return Result.Ok(dtos);
+        return Task.FromResult(Result.Ok(dtos));
     }
 
     public async Task<Result<BoardDTO>> UpdateBoard(
@@ -291,50 +292,6 @@ public class BoardService(
         return Result.Ok(resultDto);
     }
 
-
-    public async Task<Result<IEnumerable<BoardMembershipDTO>>> GetBoardMemberships(
-        int boardId,
-        int requesterId)
-    {
-        var boardResult = await GetBoard(boardId, false);
-        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
-
-        var memberships = await context.BoardMemberships
-            .AsNoTracking()
-            .Where(m => m.BoardId == boardId)
-            .ToListAsync();
-
-        if (memberships.All(m => m.UserId != requesterId))
-        {
-            logger.LogWarning(
-                "User '{RequesterId}' attempted to retrieve memberships for Board '{BoardId}' but is not a member.",
-                requesterId, boardId
-            );
-
-            return Result.Fail<IEnumerable<BoardMembershipDTO>>(
-                new InsufficientUserMembershipError(
-                    "N/A",
-                    $"View memberships for Board {boardId}"
-                )
-            );
-        }
-
-        var dtoList = memberships.Select(m => new BoardMembershipDTO(
-            m.Id,
-            m.BoardId,
-            m.UserId,
-            m.Role,
-            m.CreatedAt
-        ));
-
-        logger.LogInformation(
-            "Retrieved {Count} memberships for Board '{BoardId}' by User '{RequesterId}'.",
-            memberships.Count, boardId, requesterId
-        );
-
-        return Result.Ok(dtoList);
-    }
-
     public async Task<Result> DeleteBoardMembership(int boardId, int userId,
         int requesterId)
     {
@@ -445,6 +402,50 @@ public class BoardService(
         return Result.Ok(resultDto);
     }
 
+
+    public async Task<Result<IQueryable<BoardMembershipDTO>>> GetBoardMemberships(
+        int boardId,
+        int requesterId)
+    {
+        var boardResult = await GetBoard(boardId, false);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
+
+        var memberships = context.BoardMemberships
+            .AsNoTracking()
+            .Where(m => m.BoardId == boardId)
+            .AsQueryable();
+
+        if (memberships.All(m => m.UserId != requesterId))
+        {
+            logger.LogWarning(
+                "User '{RequesterId}' attempted to retrieve memberships for Board '{BoardId}' but is not a member.",
+                requesterId, boardId
+            );
+
+            return Result.Fail<IQueryable<BoardMembershipDTO>>(
+                new InsufficientUserMembershipError(
+                    "N/A",
+                    $"View memberships for Board {boardId}"
+                )
+            );
+        }
+
+        var dtoList = memberships.Select(m => new BoardMembershipDTO(
+            m.Id,
+            m.BoardId,
+            m.UserId,
+            m.Role,
+            m.CreatedAt
+        ));
+
+        logger.LogInformation(
+            "Retrieved {Count} memberships for Board '{BoardId}' by User '{RequesterId}'.",
+            memberships.Count(), boardId, requesterId
+        );
+
+        return Result.Ok(dtoList);
+    }
+
     private async Task<Result> SetSuperAdminMemberships(int boardId)
     {
         var superAdmins = await context.Users
@@ -552,15 +553,15 @@ public class BoardService(
     }
 
     private async Task<Result<BoardMembership>>
-        GetUserMembership(int boardId, int requesterId)
+        GetUserMembership(int boardId, int userId)
     {
         var membership = await context.BoardMemberships
-            .FirstOrDefaultAsync(m => m.BoardId == boardId && m.UserId == requesterId);
+            .FirstOrDefaultAsync(m => m.BoardId == boardId && m.UserId == userId);
 
         if (membership != null) return Result.Ok(membership);
         logger.LogWarning(
-            "User '{RequesterId}' has no membership in Board '{BoardId}'.",
-            requesterId, boardId
+            "User '{UserId}' has no membership in Board '{BoardId}'.",
+            userId, boardId
         );
 
         return Result.Fail<BoardMembership>(

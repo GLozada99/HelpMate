@@ -8,7 +8,7 @@ public interface IBoardService
 {
     Task<Result<BoardDTO>> CreateBoard(CreateBoardDTO dto, int requesterId);
     Task<Result<BoardDTO>> GetBoard(int boardId, int requesterId);
-    Task<Result<IEnumerable<BoardDTO>>> GetBoards(int requesterId);
+    Task<Result<IQueryable<BoardDTO>>> GetBoards(int requesterId);
 
     Task<Result<BoardDTO>>
         UpdateBoard(int boardId, UpdateBoardDTO dto, int requesterId);
@@ -18,7 +18,7 @@ public interface IBoardService
     Task<Result<BoardMembershipDTO>> CreateBoardMembership(int boardId,
         CreateBoardMembershipDTO dto, int requesterId);
 
-    Task<Result<IEnumerable<BoardMembershipDTO>>> GetBoardMemberships(int boardId,
+    Task<Result<IQueryable<BoardMembershipDTO>>> GetBoardMemberships(int boardId,
         int requesterId);
 
     Task<Result<BoardMembershipDTO>> UpdateBoardMembership(int boardId,
