@@ -14,7 +14,8 @@ public enum TicketStatus
     Open,
     InProgress,
     Blocked,
-    Closed
+    Closed,
+    WontDo
 }
 
 public enum TicketHistoryActionType
