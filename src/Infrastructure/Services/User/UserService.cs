@@ -24,14 +24,15 @@ public class UserService(
         if (user == null)
             return Result.Fail<UserDTO>(new UserNotFoundError(id));
 
-        var resultDto = new UserDTO(
-            user.Id,
-            user.Email,
-            user.FullName,
-            user.Role,
-            user.Status,
-            user.CreatedAt
-        );
+        var resultDto = new UserDTO
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role,
+            Status = user.Status,
+            CreatedAt = user.CreatedAt
+        };
 
         return Result.Ok(resultDto);
     }
@@ -90,14 +91,15 @@ public class UserService(
         if (saveResult.IsFailed)
             return saveResult;
 
-        var resultDto = new UserDTO(
-            user.Id,
-            user.Email,
-            user.FullName,
-            user.Role,
-            user.Status,
-            user.CreatedAt
-        );
+        var resultDto = new UserDTO
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role,
+            Status = user.Status,
+            CreatedAt = user.CreatedAt
+        };
 
         return Result.Ok(resultDto);
     }
@@ -112,14 +114,15 @@ public class UserService(
         if (dto.Status.HasValue)
             dbQuery = dbQuery.Where(u => dto.Status.Value == u.Status);
 
-        var resultDTOs = dbQuery.Select(u => new UserDTO(
-            u.Id,
-            u.Email,
-            u.FullName,
-            u.Role,
-            u.Status,
-            u.CreatedAt
-        ));
+        var resultDTOs = dbQuery.Select(u => new UserDTO
+        {
+            Id = u.Id,
+            Email = u.Email,
+            FullName = u.FullName,
+            Role = u.Role,
+            Status = u.Status,
+            CreatedAt = u.CreatedAt
+        });
 
         return Task.FromResult(Result.Ok(resultDTOs));
     }
@@ -182,14 +185,15 @@ public class UserService(
         if (saveResult.IsFailed)
             return saveResult;
 
-        var resultDto = new UserDTO(
-            user.Id,
-            user.Email,
-            user.FullName,
-            user.Role,
-            user.Status,
-            user.CreatedAt
-        );
+        var resultDto = new UserDTO
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role,
+            Status = user.Status,
+            CreatedAt = user.CreatedAt
+        };
 
         return Result.Ok(resultDto);
     }

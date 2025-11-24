@@ -59,15 +59,16 @@ public class BoardService(
 
         await SetSuperAdminMemberships(board.Id);
 
-        var resultDTO = new BoardDTO(
-            board.Id,
-            board.Code,
-            board.Name,
-            board.Description,
-            board.CreatedById,
-            board.Status,
-            board.CreatedAt
-        );
+        var resultDTO = new BoardDTO
+        {
+            Id = board.Id,
+            Code = board.Code,
+            Name = board.Name,
+            Description = board.Description,
+            CreatedById = board.CreatedById,
+            Status = board.Status,
+            CreatedAt = board.CreatedAt
+        };
 
         return Result.Ok(resultDTO);
     }
@@ -81,15 +82,16 @@ public class BoardService(
         var membershipResult = await GetUserMembership(boardId, requesterId);
         if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
 
-        var dto = new BoardDTO(
-            board.Id,
-            board.Code,
-            board.Name,
-            board.Description,
-            board.CreatedById,
-            board.Status,
-            board.CreatedAt
-        );
+        var dto = new BoardDTO
+        {
+            Id = board.Id,
+            Code = board.Code,
+            Name = board.Name,
+            Description = board.Description,
+            CreatedById = board.CreatedById,
+            Status = board.Status,
+            CreatedAt = board.CreatedAt
+        };
 
         return Result.Ok(dto);
     }
@@ -115,15 +117,17 @@ public class BoardService(
                 Result.Ok(Enumerable.Empty<BoardDTO>().AsQueryable()));
         }
 
-        var dtos = boards.Select(board => new BoardDTO(
-            board.Id,
-            board.Code,
-            board.Name,
-            board.Description,
-            board.CreatedById,
-            board.Status,
-            board.CreatedAt
-        ));
+        var dtos = boards.Select(board => new BoardDTO
+            {
+                Id = board.Id,
+                Code = board.Code,
+                Name = board.Name,
+                Description = board.Description,
+                CreatedById = board.CreatedById,
+                Status = board.Status,
+                CreatedAt = board.CreatedAt
+            }
+        );
 
         return Task.FromResult(Result.Ok(dtos));
     }
@@ -162,15 +166,16 @@ public class BoardService(
         if (saveResult.IsFailed)
             return saveResult.ToResult<BoardDTO>();
 
-        var dtoResult = new BoardDTO(
-            board.Id,
-            board.Code,
-            board.Name,
-            board.Description,
-            board.CreatedById,
-            board.Status,
-            board.CreatedAt
-        );
+        var dtoResult = new BoardDTO
+        {
+            Id = board.Id,
+            Code = board.Code,
+            Name = board.Name,
+            Description = board.Description,
+            CreatedById = board.CreatedById,
+            Status = board.Status,
+            CreatedAt = board.CreatedAt
+        };
 
         logger.LogInformation(
             "Board '{BoardId}' was updated successfully by User '{UserId}'.",
@@ -276,13 +281,14 @@ public class BoardService(
         if (saveResult.IsFailed)
             return saveResult.ToResult<BoardMembershipDTO>();
 
-        var resultDto = new BoardMembershipDTO(
-            membership.Id,
-            membership.BoardId,
-            membership.UserId,
-            membership.Role,
-            membership.CreatedAt
-        );
+        var resultDto = new BoardMembershipDTO
+        {
+            Id = membership.Id,
+            BoardId = membership.BoardId,
+            UserId = membership.UserId,
+            Role = membership.Role,
+            CreatedAt = membership.CreatedAt
+        };
 
         logger.LogInformation(
             "User '{UserId}' was added as '{Role}' to Board '{BoardId}' by Requester '{RequesterId}'.",
@@ -386,13 +392,14 @@ public class BoardService(
         if (saveResult.IsFailed)
             return saveResult.ToResult<BoardMembershipDTO>();
 
-        var resultDto = new BoardMembershipDTO(
-            membership.Id,
-            membership.BoardId,
-            membership.UserId,
-            membership.Role,
-            membership.CreatedAt
-        );
+        var resultDto = new BoardMembershipDTO
+        {
+            Id = membership.Id,
+            BoardId = membership.BoardId,
+            UserId = membership.UserId,
+            Role = membership.Role,
+            CreatedAt = membership.CreatedAt
+        };
 
         logger.LogInformation(
             "Membership '{MembershipId}' on Board '{BoardId}' was updated to role '{Role}' by User '{RequesterId}'.",
@@ -430,13 +437,14 @@ public class BoardService(
             );
         }
 
-        var dtoList = memberships.Select(m => new BoardMembershipDTO(
-            m.Id,
-            m.BoardId,
-            m.UserId,
-            m.Role,
-            m.CreatedAt
-        ));
+        var dtoList = memberships.Select(m => new BoardMembershipDTO
+        {
+            Id = m.Id,
+            BoardId = m.BoardId,
+            UserId = m.UserId,
+            Role = m.Role,
+            CreatedAt = m.CreatedAt
+        });
 
         logger.LogInformation(
             "Retrieved {Count} memberships for Board '{BoardId}' by User '{RequesterId}'.",

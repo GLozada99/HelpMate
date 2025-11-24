@@ -30,7 +30,6 @@ public class UserControllerTests
     [Fact]
     public async Task CreateUser_WhenServiceSucceeds_ReturnsCreated()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
 
@@ -42,23 +41,22 @@ public class UserControllerTests
             Role = CreateUserRole.Customer
         };
 
-        var userDto = new UserDTO(
-            123,
-            dto.Email,
-            dto.FullName,
-            UserRole.Customer,
-            UserStatus.Active,
-            DateTime.UtcNow
-        );
+        var userDto = new UserDTO
+        {
+            Id = 123,
+            Email = dto.Email,
+            FullName = dto.FullName,
+            Role = UserRole.Customer,
+            Status = UserStatus.Active,
+            CreatedAt = DateTime.UtcNow
+        };
 
         _userServiceMock
             .Setup(s => s.CreateUser(dto, user.Id))
             .ReturnsAsync(Result.Ok(userDto));
 
-        // Act
         var result = await controller.CreateUser(dto);
 
-        // Assert
         var ok = result.Result.Should()
             .BeOfType<CreatedAtActionResult>()
             .Subject;
@@ -75,7 +73,6 @@ public class UserControllerTests
     [Fact]
     public async Task CreateUser_WhenEmailAlreadyInUse_ReturnsConflict()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
 
@@ -93,10 +90,8 @@ public class UserControllerTests
             .Setup(s => s.CreateUser(dto, user.Id))
             .ReturnsAsync(Result.Fail<UserDTO>(error));
 
-        // Act
         var result = await controller.CreateUser(dto);
 
-        // Assert
         var conflict = result.Result.Should()
             .BeOfType<ConflictObjectResult>()
             .Subject;
@@ -111,27 +106,25 @@ public class UserControllerTests
     [Fact]
     public async Task GetUser_WhenFound_ReturnsOk()
     {
-        // Arrange
         var controller = CreateController();
         const int userId = 123;
 
-        var userDto = new UserDTO(
-            userId,
-            "test@example.com",
-            "Test User",
-            UserRole.Customer,
-            UserStatus.Active,
-            DateTime.UtcNow
-        );
+        var userDto = new UserDTO
+        {
+            Id = userId,
+            Email = "test@example.com",
+            FullName = "Test User",
+            Role = UserRole.Customer,
+            Status = UserStatus.Active,
+            CreatedAt = DateTime.UtcNow
+        };
 
         _userServiceMock
             .Setup(s => s.GetUser(userId))
             .ReturnsAsync(Result.Ok(userDto));
 
-        // Act
         var result = await controller.GetUser(userId);
 
-        // Assert
         var ok = result.Result.Should()
             .BeOfType<OkObjectResult>()
             .Subject;
@@ -146,7 +139,6 @@ public class UserControllerTests
     [Fact]
     public async Task GetUser_WhenNotFound_ReturnsNotFound()
     {
-        // Arrange
         var controller = CreateController();
         const int userId = 999;
 
@@ -156,10 +148,8 @@ public class UserControllerTests
             .Setup(s => s.GetUser(userId))
             .ReturnsAsync(Result.Fail<UserDTO>(error));
 
-        // Act
         var result = await controller.GetUser(userId);
 
-        // Assert
         var notFound = result.Result.Should()
             .BeOfType<NotFoundObjectResult>()
             .Subject;
@@ -174,28 +164,26 @@ public class UserControllerTests
     [Fact]
     public async Task DeactivateUser_WhenFound_ReturnsOk()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
+
         const int userId = 123;
 
         _userServiceMock
             .Setup(s => s.DeactivateUser(userId, user.Id))
             .ReturnsAsync(Result.Ok());
 
-        // Act
         var result = await controller.DeactivateUser(userId);
 
-        // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
     }
 
     [Fact]
     public async Task DeactivateUser_WhenInsufficientPermission_ReturnsConflict()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
+
         const int userId = 123;
 
         var error = new InsufficientPermissionError();
@@ -204,10 +192,8 @@ public class UserControllerTests
             .Setup(s => s.DeactivateUser(userId, user.Id))
             .ReturnsAsync(error);
 
-        // Act
         var result = await controller.DeactivateUser(userId);
 
-        // Assert
         var conflict = result.Result.Should()
             .BeOfType<ConflictObjectResult>()
             .Subject;
@@ -222,35 +208,34 @@ public class UserControllerTests
     [Fact]
     public async Task UpdateUser_WhenServiceSucceeds_ReturnsOk()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
-        var dto = new UpdateUserDTO(
-            "new@example.com",
-            "New Name",
-            UpdateUserRole.Customer,
-            UpdateUserStatus.Active
-        );
+        var dto = new UpdateUserDTO
+        {
+            Email = "new@example.com",
+            FullName = "New Name",
+            Role = UpdateUserRole.Customer,
+            Status = UpdateUserStatus.Active
+        };
 
-        var updatedUser = new UserDTO(
-            userId,
-            dto.Email!,
-            dto.FullName!,
-            UserRole.Customer,
-            UserStatus.Active,
-            DateTime.UtcNow
-        );
+        var updatedUser = new UserDTO
+        {
+            Id = userId,
+            Email = dto.Email!,
+            FullName = dto.FullName!,
+            Role = UserRole.Customer,
+            Status = UserStatus.Active,
+            CreatedAt = DateTime.UtcNow
+        };
 
         _userServiceMock
             .Setup(s => s.UpdateUser(userId, dto, user.Id))
             .ReturnsAsync(Result.Ok(updatedUser));
 
-        // Act
         var result = await controller.UpdateUser(userId, dto);
 
-        // Assert
         var ok = result.Result.Should()
             .BeOfType<OkObjectResult>()
             .Subject;
@@ -267,17 +252,17 @@ public class UserControllerTests
     [Fact]
     public async Task UpdateUser_WhenUserNotFound_ReturnsNotFound()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
-        var dto = new UpdateUserDTO(
-            "new@example.com",
-            "New Name",
-            UpdateUserRole.Customer,
-            UpdateUserStatus.Active
-        );
+        var dto = new UpdateUserDTO
+        {
+            Email = "new@example.com",
+            FullName = "New Name",
+            Role = UpdateUserRole.Customer,
+            Status = UpdateUserStatus.Active
+        };
 
         var error = new UserNotFoundError(userId);
 
@@ -285,10 +270,8 @@ public class UserControllerTests
             .Setup(s => s.UpdateUser(userId, dto, user.Id))
             .ReturnsAsync(Result.Fail<UserDTO>(error));
 
-        // Act
         var result = await controller.UpdateUser(userId, dto);
 
-        // Assert
         var notFound = result.Result.Should()
             .BeOfType<NotFoundObjectResult>()
             .Subject;
@@ -305,17 +288,17 @@ public class UserControllerTests
     [Fact]
     public async Task UpdateUser_WhenEmailAlreadyInUse_ReturnsBadRequest()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
 
-        var dto = new UpdateUserDTO(
-            "taken@example.com",
-            "Test User",
-            UpdateUserRole.Customer,
-            UpdateUserStatus.Active
-        );
+        var dto = new UpdateUserDTO
+        {
+            Email = "taken@example.com",
+            FullName = "Test User",
+            Role = UpdateUserRole.Customer,
+            Status = UpdateUserStatus.Active
+        };
 
         var error = new UserEmailAlreadyInUseError(dto.Email!);
 
@@ -323,10 +306,8 @@ public class UserControllerTests
             .Setup(s => s.UpdateUser(userId, dto, user.Id))
             .ReturnsAsync(Result.Fail<UserDTO>(error));
 
-        // Act
         var result = await controller.UpdateUser(userId, dto);
 
-        // Assert
         var badRequest = result.Result.Should()
             .BeOfType<BadRequestObjectResult>()
             .Subject;
@@ -343,7 +324,6 @@ public class UserControllerTests
     [Fact]
     public async Task DeactivateUser_WhenNotFound_ReturnsNotFound()
     {
-        // Arrange
         var controller = CreateController();
         var user = ClaimsHelper.InsertUserInClaims(controller);
         const int userId = 123;
@@ -354,10 +334,8 @@ public class UserControllerTests
             .Setup(s => s.DeactivateUser(userId, user.Id))
             .ReturnsAsync(Result.Fail(error));
 
-        // Act
         var result = await controller.DeactivateUser(userId);
 
-        // Assert
         var notFound = result.Result.Should()
             .BeOfType<NotFoundObjectResult>()
             .Subject;
