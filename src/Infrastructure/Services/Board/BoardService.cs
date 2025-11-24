@@ -330,14 +330,17 @@ public class BoardService(
         return Result.Ok(dtoList);
     }
 
-    public async Task<Result> RemoveBoardMembership(int boardId, int userId,
+    public async Task<Result> DeleteBoardMembership(int boardId, int userId,
         int requesterId)
     {
         var boardResult = await GetBoard(boardId, false);
         if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
         var membershipResult = await GetUserMembership(boardId, userId);
-        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
+        if (membershipResult.IsFailed)
+            return Result.Fail(
+                new BoardMembershipNotFoundError(
+                    $"No membership on board {boardId} for user {userId}"));
         var membership = membershipResult.Value;
 
         var requesterMembershipResult =
@@ -388,7 +391,10 @@ public class BoardService(
         if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
         var membershipResult = await GetUserMembership(boardId, userId);
-        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
+        if (membershipResult.IsFailed)
+            return Result.Fail(
+                new BoardMembershipNotFoundError(
+                    $"No membership on board {boardId} for user {userId}"));
         var membership = membershipResult.Value;
 
         var requesterMembershipResult =

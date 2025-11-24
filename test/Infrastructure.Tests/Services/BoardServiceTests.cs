@@ -511,7 +511,7 @@ public class BoardServiceTests
 
 
     [Fact]
-    public async Task RemoveBoardMembership_ShouldRemove_WhenNotLastOwner()
+    public async Task DeleteBoardMembership_ShouldRemove_WhenNotLastOwner()
     {
         var db = CreateDbContext();
         var service = CreateService(db);
@@ -548,14 +548,14 @@ public class BoardServiceTests
         await db.SaveChangesAsync();
 
         var result =
-            await service.RemoveBoardMembership(board.Id, owner1.Id, owner2.Id);
+            await service.DeleteBoardMembership(board.Id, owner1.Id, owner2.Id);
 
         result.IsSuccess.Should().BeTrue();
         db.BoardMemberships.Count().Should().Be(1);
     }
 
     [Fact]
-    public async Task RemoveBoardMembership_ShouldFail_WhenLastOwner()
+    public async Task DeleteBoardMembership_ShouldFail_WhenLastOwner()
     {
         var db = CreateDbContext();
         var service = CreateService(db);
@@ -575,7 +575,7 @@ public class BoardServiceTests
         var membership = await db.BoardMemberships.FirstOrDefaultAsync();
         membership.Should().NotBeNull();
 
-        var result = await service.RemoveBoardMembership(membership.BoardId,
+        var result = await service.DeleteBoardMembership(membership.BoardId,
             membership.UserId, owner.Id);
 
         result.IsFailed.Should().BeTrue();

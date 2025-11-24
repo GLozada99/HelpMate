@@ -26,5 +26,5 @@ public interface IBoardService
         UpdateBoardMembershipDTO dto,
         int requesterId);
 
-    Task<Result> RemoveBoardMembership(int boardId, int userId, int requesterId);
+    Task<Result> DeleteBoardMembership(int boardId, int userId, int requesterId);
 }

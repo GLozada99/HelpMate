@@ -11,8 +11,8 @@ public class BoardNotFoundError(int id)
 public class BoardMembershipAlreadyExistsError(int userId, int boardId)
     : Error($"User with id '{userId}' is already member of board with id: {boardId}.");
 
-public class BoardMembershipNotFoundError(int id)
-    : Error($"No board membership found with id: {id}.");
+public class BoardMembershipNotFoundError(string message)
+    : Error(message);
 
 public class InvalidBoardState(string message)
     : Error(message);

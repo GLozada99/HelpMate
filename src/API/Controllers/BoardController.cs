@@ -39,7 +39,7 @@ public class BoardController(
             UserNotFoundError => ApiResponseHelper.Failure(errors, BadRequest),
             BoardCodeAlreadyExistsError => ApiResponseHelper.Failure(errors, Conflict),
             InsufficientUserPermissionsError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -60,7 +60,7 @@ public class BoardController(
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
             InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -97,7 +97,7 @@ public class BoardController(
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
             InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -118,7 +118,7 @@ public class BoardController(
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
             InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -147,7 +147,7 @@ public class BoardController(
             BoardMembershipAlreadyExistsError => ApiResponseHelper.Failure(errors,
                 Conflict),
             InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -170,7 +170,7 @@ public class BoardController(
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
             InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -197,18 +197,18 @@ public class BoardController(
             BoardMembershipNotFoundError => ApiResponseHelper
                 .Failure(errors, NotFound),
             InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpDelete("{boardId:int}/memberships/{userId:int}")]
-    public async Task<ActionResult<ApiResponse<object>>> RemoveBoardMembership(
+    public async Task<ActionResult<ApiResponse<object>>> DeleteBoardMembership(
         int boardId, int userId)
     {
         var result =
-            await boardService.RemoveBoardMembership(boardId, userId, UserId);
+            await boardService.DeleteBoardMembership(boardId, userId, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success<object>(null, Ok);
@@ -223,7 +223,7 @@ public class BoardController(
             BoardMembershipNotFoundError => ApiResponseHelper
                 .Failure(errors, NotFound),
             InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                _ => Forbid()),
+                response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
