@@ -404,6 +404,48 @@ public class BoardServiceTests
     }
 
     [Fact]
+    public async Task CreateBoardMembership_ShouldFail_WhenRoleIsInvalidForUser()
+    {
+        var db = CreateDbContext();
+        var service = CreateService(db);
+
+        var owner = CreateUser(1);
+        var target = CreateUser(2, UserRole.Customer);
+        db.Users.AddRange(owner, target);
+
+        var board = new Board
+        {
+            Id = 50,
+            Code = "JOHN",
+            Name = "Team",
+            Description = "Desc",
+            CreatedById = owner.Id
+        };
+        db.Boards.Add(board);
+
+        db.BoardMemberships.Add(new BoardMembership
+        {
+            BoardId = board.Id,
+            UserId = owner.Id,
+            Role = MembershipRole.Owner
+        });
+
+        await db.SaveChangesAsync();
+
+        var dto = new CreateBoardMembershipDTO
+        {
+            UserId = target.Id,
+            Role = MembershipRole.Editor
+        };
+
+        var result = await service.CreateBoardMembership(board.Id, dto, owner.Id);
+
+        result.IsFailed.Should().BeTrue();
+        db.BoardMemberships.Count().Should().Be(1);
+        result.Errors[0].Should().BeOfType<InsufficientUserPermissionsError>();
+    }
+
+    [Fact]
     public async Task UpdateBoardMembership_ShouldUpdateRole_WhenRequesterIsOwner()
     {
         var db = CreateDbContext();

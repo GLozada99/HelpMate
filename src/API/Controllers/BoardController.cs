@@ -196,8 +196,9 @@ public class BoardController(
                 BadRequest),
             BoardMembershipNotFoundError => ApiResponseHelper
                 .Failure(errors, NotFound),
-            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                response => new ObjectResult(response) { StatusCode = 403 }),
+            InsufficientUserMembershipError or InsufficientUserPermissionsError =>
+                ApiResponseHelper.Failure(errors,
+                    response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }
@@ -222,8 +223,9 @@ public class BoardController(
                 BadRequest),
             BoardMembershipNotFoundError => ApiResponseHelper
                 .Failure(errors, NotFound),
-            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
-                response => new ObjectResult(response) { StatusCode = 403 }),
+            InsufficientUserMembershipError or InsufficientUserPermissionsError =>
+                ApiResponseHelper.Failure(errors,
+                    response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
     }

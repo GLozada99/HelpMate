@@ -248,6 +248,11 @@ public class BoardService(
             );
         }
 
+        var canHaveMembershipRole =
+            BoardRulesHelper.CanHaveMembershipRole(targetUser.Role, dto.Role);
+        if (canHaveMembershipRole.IsFailed)
+            return Result.Fail(canHaveMembershipRole.Errors);
+
         // If the user is SuperAdmin → always Owner
         var role = targetUser.Role == UserRole.SuperAdmin
             ? MembershipRole.Owner
@@ -390,6 +395,9 @@ public class BoardService(
         var boardResult = await GetBoard(boardId, false);
         if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
+        var userResult = await GetUser(userId, false);
+        if (userResult.IsFailed) return Result.Fail(userResult.Errors);
+
         var membershipResult = await GetUserMembership(boardId, userId);
         if (membershipResult.IsFailed)
             return Result.Fail(
@@ -405,6 +413,11 @@ public class BoardService(
         var canUpdate =
             BoardRulesHelper.CanUpdateMembership(requesterMembershipResult.Value.Role);
         if (canUpdate.IsFailed) return Result.Fail(canUpdate.Errors);
+
+        var canHaveMembershipRole =
+            BoardRulesHelper.CanHaveMembershipRole(userResult.Value.Role, dto.Role);
+        if (canHaveMembershipRole.IsFailed)
+            return Result.Fail(canHaveMembershipRole.Errors);
 
         membership.Role = dto.Role;
 
