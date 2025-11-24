@@ -83,4 +83,31 @@ public static class BoardRulesHelper
             ? Result.Fail(new BoardCodeAlreadyExistsError(boardCode))
             : Result.Ok();
     }
+
+    public static Result CanHaveMembershipRole(UserRole role,
+        MembershipRole membershipRole)
+    {
+        var allowedRoles = GetAllowedMembershipRoles(role);
+        return allowedRoles.Contains(membershipRole)
+            ? Result.Ok()
+            : Result.Fail(new InsufficientUserPermissionsError(role.ToString(),
+                $"Have a {membershipRole.ToString()} membership."));
+    }
+
+    private static List<MembershipRole> GetAllowedMembershipRoles(
+        UserRole userRole)
+    {
+        return userRole switch
+        {
+            UserRole.Admin or UserRole.SuperAdmin =>
+            [
+                MembershipRole.Owner, MembershipRole.Agent, MembershipRole.Editor,
+                MembershipRole.Viewer
+            ],
+            UserRole.Agent =>
+                [MembershipRole.Agent, MembershipRole.Editor, MembershipRole.Viewer],
+            UserRole.Customer => [MembershipRole.Viewer],
+            _ => throw new ArgumentOutOfRangeException(nameof(userRole), userRole, null)
+        };
+    }
 }
