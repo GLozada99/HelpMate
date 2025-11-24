@@ -74,7 +74,7 @@ public class BoardService(
 
     public async Task<Result<BoardDTO>> GetBoard(int boardId, int requesterId)
     {
-        var boardResult = await GetBoard(boardId);
+        var boardResult = await GetBoard(boardId, false);
         if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
         var board = boardResult.Value;
 
@@ -222,7 +222,7 @@ public class BoardService(
         CreateBoardMembershipDTO dto,
         int requesterId)
     {
-        var boardResult = await GetBoard(boardId);
+        var boardResult = await GetBoard(boardId, false);
         if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
         var membershipResult = await GetUserMembership(boardId, requesterId);
@@ -291,7 +291,7 @@ public class BoardService(
         int boardId,
         int requesterId)
     {
-        var boardResult = await GetBoard(boardId);
+        var boardResult = await GetBoard(boardId, false);
         if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
         var memberships = await context.BoardMemberships
@@ -330,78 +330,23 @@ public class BoardService(
         return Result.Ok(dtoList);
     }
 
-
-    public async Task<Result<BoardMembershipDTO>> UpdateBoardMembership(
-        int membershipId,
-        UpdateBoardMembershipDTO dto,
+    public async Task<Result> RemoveBoardMembership(int boardId, int userId,
         int requesterId)
     {
-        var membership = await context.BoardMemberships.Include(m => m.Board)
-            .FirstOrDefaultAsync(m => m.Id == membershipId);
+        var boardResult = await GetBoard(boardId, false);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
 
-        if (membership == null)
-        {
-            logger.LogWarning(
-                "Cannot update BoardMembership '{MembershipId}' because it does not exist.",
-                membershipId
-            );
-            return Result.Fail<BoardMembershipDTO>(
-                new BoardMembershipNotFoundError(membershipId)
-            );
-        }
-
-        var membershipResult = await GetUserMembership(membership.BoardId, requesterId);
+        var membershipResult = await GetUserMembership(boardId, userId);
         if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
+        var membership = membershipResult.Value;
 
-        var canUpdate =
-            BoardRulesHelper.CanUpdateMembership(membershipResult.Value.Role);
-        if (canUpdate.IsFailed) return Result.Fail(canUpdate.Errors);
-
-        membership.Role = dto.Role;
-
-        var saveResult = await context.SaveChangesResultAsync(
-            logger,
-            () => new BaseError()
-        );
-
-        if (saveResult.IsFailed)
-            return saveResult.ToResult<BoardMembershipDTO>();
-
-        var resultDto = new BoardMembershipDTO(
-            membership.Id,
-            membership.BoardId,
-            membership.UserId,
-            membership.Role,
-            membership.CreatedAt
-        );
-
-        logger.LogInformation(
-            "Membership '{MembershipId}' on Board '{BoardId}' was updated to role '{Role}' by User '{RequesterId}'.",
-            membershipId, membership.BoardId, membership.Role, requesterId
-        );
-
-        return Result.Ok(resultDto);
-    }
-
-    public async Task<Result> RemoveBoardMembership(int membershipId, int requesterId)
-    {
-        var membership = await context.BoardMemberships
-            .FirstOrDefaultAsync(m => m.Id == membershipId);
-
-        if (membership == null)
-        {
-            logger.LogWarning(
-                "Cannot remove BoardMembership '{MembershipId}' because it does not exist.",
-                membershipId
-            );
-            return Result.Fail(new BoardMembershipNotFoundError(membershipId));
-        }
-
-        var membershipResult = await GetUserMembership(membership.BoardId, requesterId);
-        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
+        var requesterMembershipResult =
+            await GetUserMembership(boardId, requesterId);
+        if (requesterMembershipResult.IsFailed)
+            return Result.Fail(requesterMembershipResult.Errors);
 
         var canRemove =
-            BoardRulesHelper.CanRemoveMembership(membershipResult.Value.Role);
+            BoardRulesHelper.CanRemoveMembership(requesterMembershipResult.Value.Role);
         if (canRemove.IsFailed) return Result.Fail(canRemove.Errors);
 
         var ownersCount = await context.BoardMemberships
@@ -427,10 +372,58 @@ public class BoardService(
 
         logger.LogInformation(
             "Membership '{MembershipId}' was removed from Board '{BoardId}' by Requester '{RequesterId}'.",
-            membershipId, membership.BoardId, requesterId
+            membership.Id, membership.BoardId, requesterId
         );
 
         return Result.Ok();
+    }
+
+    public async Task<Result<BoardMembershipDTO>> UpdateBoardMembership(
+        int boardId,
+        int userId,
+        UpdateBoardMembershipDTO dto,
+        int requesterId)
+    {
+        var boardResult = await GetBoard(boardId, false);
+        if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
+
+        var membershipResult = await GetUserMembership(boardId, userId);
+        if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
+        var membership = membershipResult.Value;
+
+        var requesterMembershipResult =
+            await GetUserMembership(boardId, requesterId);
+        if (requesterMembershipResult.IsFailed)
+            return Result.Fail(requesterMembershipResult.Errors);
+
+        var canUpdate =
+            BoardRulesHelper.CanUpdateMembership(requesterMembershipResult.Value.Role);
+        if (canUpdate.IsFailed) return Result.Fail(canUpdate.Errors);
+
+        membership.Role = dto.Role;
+
+        var saveResult = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (saveResult.IsFailed)
+            return saveResult.ToResult<BoardMembershipDTO>();
+
+        var resultDto = new BoardMembershipDTO(
+            membership.Id,
+            membership.BoardId,
+            membership.UserId,
+            membership.Role,
+            membership.CreatedAt
+        );
+
+        logger.LogInformation(
+            "Membership '{MembershipId}' on Board '{BoardId}' was updated to role '{Role}' by User '{RequesterId}'.",
+            boardId, membership.BoardId, membership.Role, requesterId
+        );
+
+        return Result.Ok(resultDto);
     }
 
     private async Task<Result> SetSuperAdminMemberships(int boardId)
@@ -504,10 +497,12 @@ public class BoardService(
     }
 
     private async Task<Result<Domain.Entities.Board.Board>>
-        GetBoard(int boardId)
+        GetBoard(int boardId, bool track = true)
     {
-        var board = await context.Boards
-            .FirstOrDefaultAsync(b => b.Id == boardId);
+        var board = track
+            ? await context.Boards.FindAsync(boardId)
+            : await context.Boards.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == boardId);
 
         if (board != null) return Result.Ok(board);
 

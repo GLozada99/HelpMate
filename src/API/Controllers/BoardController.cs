@@ -176,13 +176,13 @@ public class BoardController(
     }
 
     [Authorize(Roles = "Admin,SuperAdmin")]
-    [HttpPut("memberships/{membershipId:int}")]
+    [HttpPut("{boardId:int}/memberships/{userId:int}")]
     public async Task<ActionResult<ApiResponse<BoardMembershipDTO>>>
         UpdateBoardMembership(
-            int membershipId, UpdateBoardMembershipDTO dto)
+            int boardId, int userId, UpdateBoardMembershipDTO dto)
     {
         var result =
-            await boardService.UpdateBoardMembership(membershipId, dto, UserId);
+            await boardService.UpdateBoardMembership(boardId, userId, dto, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success(result.Value, Ok);
@@ -203,12 +203,12 @@ public class BoardController(
     }
 
     [Authorize(Roles = "Admin,SuperAdmin")]
-    [HttpDelete("memberships/{membershipId:int}")]
+    [HttpDelete("{boardId:int}/memberships/{userId:int}")]
     public async Task<ActionResult<ApiResponse<object>>> RemoveBoardMembership(
-        int membershipId)
+        int boardId, int userId)
     {
         var result =
-            await boardService.RemoveBoardMembership(membershipId, UserId);
+            await boardService.RemoveBoardMembership(boardId, userId, UserId);
 
         if (result.IsSuccess)
             return ApiResponseHelper.Success<object>(null, Ok);

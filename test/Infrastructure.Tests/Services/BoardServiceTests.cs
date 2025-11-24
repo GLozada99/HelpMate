@@ -404,6 +404,113 @@ public class BoardServiceTests
     }
 
     [Fact]
+    public async Task UpdateBoardMembership_ShouldUpdateRole_WhenRequesterIsOwner()
+    {
+        var db = CreateDbContext();
+        var service = CreateService(db);
+
+        var owner = CreateUser(1);
+        var target = CreateUser(2, UserRole.Agent);
+
+        db.Users.AddRange(owner, target);
+        await db.SaveChangesAsync();
+
+        var board = await service.CreateBoard(new CreateBoardDTO
+        {
+            Code = "ABCD",
+            Name = "Support",
+            Description = "Support Board"
+        }, owner.Id);
+        board.IsSuccess.Should().BeTrue();
+
+        var membership = await service.CreateBoardMembership(board.Value.Id,
+            new CreateBoardMembershipDTO
+            {
+                UserId = target.Id,
+                Role = MembershipRole.Agent
+            }, owner.Id);
+        membership.IsSuccess.Should().BeTrue();
+
+        var dto = new UpdateBoardMembershipDTO(
+            MembershipRole.Editor);
+
+        var result = await service.UpdateBoardMembership(
+            board.Value.Id,
+            target.Id,
+            dto,
+            owner.Id);
+        result.Errors.Should().BeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Role.Should().Be(MembershipRole.Editor);
+        var dbMembership = await db.BoardMemberships.FindAsync(result.Value.Id);
+        dbMembership.Should().NotBeNull();
+        dbMembership.Role.Should().Be(MembershipRole.Editor);
+    }
+
+    [Fact]
+    public async Task UpdateBoardMembership_ShouldFail_WhenBoardDoesNotExist()
+    {
+        var db = CreateDbContext();
+        var service = CreateService(db);
+
+        var user = CreateUser(1);
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var dto = new UpdateBoardMembershipDTO(MembershipRole.Agent);
+
+        var result = await service.UpdateBoardMembership(
+            999,
+            user.Id,
+            dto,
+            user.Id);
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors[0].Should().BeOfType<BoardNotFoundError>();
+    }
+
+    [Fact]
+    public async Task UpdateBoardMembership_ShouldFail_WhenRequesterIsNotOwner()
+    {
+        var db = CreateDbContext();
+        var service = CreateService(db);
+
+        var owner = CreateUser(1);
+        var target = CreateUser(2, UserRole.Agent);
+
+        db.Users.AddRange(owner, target);
+        await db.SaveChangesAsync();
+
+        var board = await service.CreateBoard(new CreateBoardDTO
+        {
+            Code = "ABCD",
+            Name = "Support",
+            Description = "Support Board"
+        }, owner.Id);
+        board.IsSuccess.Should().BeTrue();
+
+        var membership = await service.CreateBoardMembership(board.Value.Id,
+            new CreateBoardMembershipDTO
+            {
+                UserId = target.Id,
+                Role = MembershipRole.Agent
+            }, owner.Id);
+        membership.IsSuccess.Should().BeTrue();
+
+        var dto = new UpdateBoardMembershipDTO(
+            MembershipRole.Editor);
+
+        var result = await service.UpdateBoardMembership(
+            board.Value.Id,
+            owner.Id,
+            dto,
+            target.Id);
+        result.IsFailed.Should().BeTrue();
+        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+    }
+
+
+    [Fact]
     public async Task RemoveBoardMembership_ShouldRemove_WhenNotLastOwner()
     {
         var db = CreateDbContext();
@@ -440,7 +547,8 @@ public class BoardServiceTests
 
         await db.SaveChangesAsync();
 
-        var result = await service.RemoveBoardMembership(10, owner2.Id);
+        var result =
+            await service.RemoveBoardMembership(board.Id, owner1.Id, owner2.Id);
 
         result.IsSuccess.Should().BeTrue();
         db.BoardMemberships.Count().Should().Be(1);
@@ -467,7 +575,8 @@ public class BoardServiceTests
         var membership = await db.BoardMemberships.FirstOrDefaultAsync();
         membership.Should().NotBeNull();
 
-        var result = await service.RemoveBoardMembership(membership.Id, owner.Id);
+        var result = await service.RemoveBoardMembership(membership.BoardId,
+            membership.UserId, owner.Id);
 
         result.IsFailed.Should().BeTrue();
         result.Errors[0].Should().BeOfType<InvalidBoardState>();

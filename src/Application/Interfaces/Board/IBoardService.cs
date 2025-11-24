@@ -21,9 +21,10 @@ public interface IBoardService
     Task<Result<IEnumerable<BoardMembershipDTO>>> GetBoardMemberships(int boardId,
         int requesterId);
 
-    Task<Result<BoardMembershipDTO>> UpdateBoardMembership(int membershipId,
+    Task<Result<BoardMembershipDTO>> UpdateBoardMembership(int boardId,
+        int userId,
         UpdateBoardMembershipDTO dto,
         int requesterId);
 
-    Task<Result> RemoveBoardMembership(int membershipId, int requesterId);
+    Task<Result> RemoveBoardMembership(int boardId, int userId, int requesterId);
 }
