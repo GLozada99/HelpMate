@@ -44,13 +44,4 @@ public static class TicketRulesHelper
                     "Be Assigned"))
         };
     }
-
-    public static Result CanAssignUsers(MembershipRole role)
-    {
-        return role == MembershipRole.Viewer
-            ? Result.Fail(
-                new InsufficientUserMembershipPermissionsError($"{role} membership",
-                    "Assign Users"))
-            : Result.Ok();
-    }
 }
