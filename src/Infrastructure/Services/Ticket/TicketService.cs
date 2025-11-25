@@ -1,4 +1,4 @@
-using Application.DTOs.Tickets;
+using Application.DTOs.Ticket.Ticket;
 using Application.Errors;
 using Application.Helpers.Ticket;
 using Application.Interfaces.Ticket;

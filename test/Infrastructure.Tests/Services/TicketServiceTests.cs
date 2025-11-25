@@ -1,6 +1,6 @@
 using Application.DTOs.Board.Board;
 using Application.DTOs.Board.BoardMembership;
-using Application.DTOs.Tickets;
+using Application.DTOs.Ticket.Ticket;
 using Application.Errors;
 using Domain.Entities.Board;
 using Domain.Entities.User;

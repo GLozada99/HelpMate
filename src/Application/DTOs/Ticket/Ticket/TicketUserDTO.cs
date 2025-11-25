@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Application.DTOs.Tickets;
+namespace Application.DTOs.Ticket.Ticket;
 
 public record TicketUserDTO
 {

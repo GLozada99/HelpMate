@@ -1,4 +1,4 @@
-using Application.DTOs.Tickets;
+using Application.DTOs.Ticket.Ticket;
 using FluentResults;
 
 namespace Application.Interfaces.Ticket;

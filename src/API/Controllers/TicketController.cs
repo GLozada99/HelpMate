@@ -1,7 +1,7 @@
 using API.Interfaces.Response;
 using Application.DTOs.Pagination;
 using Application.DTOs.Shared;
-using Application.DTOs.Tickets;
+using Application.DTOs.Ticket.Ticket;
 using Application.Errors;
 using Application.Helpers.Pagination;
 using Application.Interfaces.Ticket;
