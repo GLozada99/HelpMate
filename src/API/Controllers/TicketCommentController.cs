@@ -73,7 +73,7 @@ public class TicketCommentController(
         };
     }
 
-    [HttpPut("{commentId:int}")]
+    [HttpPatch("{commentId:int}")]
     public async Task<ActionResult<ApiResponse<TicketCommentDTO>>> UpdateComment(
         int boardId,
         int ticketId,
