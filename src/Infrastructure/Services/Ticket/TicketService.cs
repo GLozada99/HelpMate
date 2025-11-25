@@ -477,7 +477,7 @@ public class TicketService(
 
         var canEditResult =
             TicketCommentRulesHelper.CanEdit(comment.UserId == requesterId);
-        if (!canEditResult.IsFailed) return Result.Fail(canEditResult.Errors);
+        if (canEditResult.IsFailed) return Result.Fail(canEditResult.Errors);
 
         comment.Text = dto.Text;
         comment.Edited = true;
@@ -533,7 +533,7 @@ public class TicketService(
         var canDeleteResult =
             TicketCommentRulesHelper.CanDelete(membership.Role,
                 comment.UserId == requesterId);
-        if (!canDeleteResult.IsFailed) return Result.Fail(canDeleteResult.Errors);
+        if (canDeleteResult.IsFailed) return Result.Fail(canDeleteResult.Errors);
 
         context.TicketComments.Remove(comment);
         var save = await context.SaveChangesResultAsync(
