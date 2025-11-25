@@ -92,7 +92,7 @@ public class TicketController(
         return ApiResponseHelper.Success(paginated, Ok);
     }
 
-    [HttpPut("{ticketId:int}")]
+    [HttpPatch("{ticketId:int}")]
     public async Task<ActionResult<ApiResponse<TicketDTO>>> UpdateTicket(
         int boardId,
         int ticketId,

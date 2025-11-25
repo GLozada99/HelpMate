@@ -60,7 +60,7 @@ public class UserController(
     }
 
     [Authorize(Roles = "Admin,SuperAdmin")]
-    [HttpPut("{id:int}")]
+    [HttpPatch("{id:int}")]
     public async Task<ActionResult<ApiResponse<UserDTO>>> UpdateUser(int id,
         UpdateUserDTO dto)
     {
