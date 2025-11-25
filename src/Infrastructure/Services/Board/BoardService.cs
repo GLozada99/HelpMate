@@ -230,6 +230,10 @@ public class BoardService(
     {
         var boardResult = await GetBoard(boardId, false);
         if (boardResult.IsFailed) return Result.Fail(boardResult.Errors);
+        var board = boardResult.Value;
+
+        if (board.Status != BoardStatus.Active)
+            return Result.Fail(new BoardInactiveError(board.Id));
 
         var membershipResult = await GetUserMembership(boardId, requesterId);
         if (membershipResult.IsFailed) return Result.Fail(membershipResult.Errors);
@@ -258,6 +262,9 @@ public class BoardService(
             BoardRulesHelper.CanHaveMembershipRole(targetUser.Role, dto.Role);
         if (canHaveMembershipRole.IsFailed)
             return Result.Fail(canHaveMembershipRole.Errors);
+
+        if (targetUser.Status != UserStatus.Active)
+            return Result.Fail(new UserInactiveInUseError(targetUser.Id));
 
         // If the user is SuperAdmin → always Owner
         var role = targetUser.Role == UserRole.SuperAdmin
@@ -531,7 +538,7 @@ public class BoardService(
         var board = track
             ? await context.Boards.FindAsync(boardId)
             : await context.Boards.AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == boardId);
+                .FirstOrDefaultAsync(b => b.Id == boardId);
 
         if (board != null) return Result.Ok(board);
 

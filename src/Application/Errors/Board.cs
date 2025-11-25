@@ -8,6 +8,9 @@ public class BoardCodeAlreadyExistsError(string code)
 public class BoardNotFoundError(int id)
     : Error($"No board found with id: {id}.");
 
+public class BoardInactiveError(int id)
+    : Error($"Board with  id '{id}' is inactive.");
+
 public class BoardMembershipAlreadyExistsError(int userId, int boardId)
     : Error($"User with id '{userId}' is already member of board with id: {boardId}.");
 

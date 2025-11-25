@@ -92,7 +92,8 @@ The following tools are used in the project:
 
 The following commands are included:
 - `deploy`: Builds the project into a docker container and starts it. Updates the database with any pending migrations.
-- `db-new-migration 'migration_name'`: Creates a new migration file detecting any changes and updates the HelpMateDbContextModelSnapshot file
+- `db-new-migration 'migration_name'`: Creates a new migration file detecting any changes and updates the 
+  HelpMateDbContextModelSnapshot file
 - `db-update`: Updates the database with any pending migrations.
 - `db-reset`: Drops everything in the db and executes migrations.
 - `api-run 'port'`: Runs the API on the specified port.
@@ -102,6 +103,15 @@ The following commands are included:
 
 ## **6. Roadmap**
 
+- Password management features:
+  - A PasswordReset entity containing:
+    - `UserId`
+    - `Token`
+    - `Expiration`
+  - Endpoints for password management:
+    - `/api/auth/request-password-reset POST`: Create a PasswordReset entry and send an 
+      email to the user with the link to follow including the generated token
+    - `/api/auth/password-reset POST`: Expects the token and a new password to be set.
 - Some fields which are currently implemented as enums may benefit (improve the system flexibility)
 from being part of their own table:
   - `UserRole`
