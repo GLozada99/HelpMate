@@ -7,9 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Entities\" />
-        <Folder Include="Enums\" />
-        <Folder Include="Interfaces\" />
+        <Folder Include="Entities\Board\"/>
+        <Folder Include="Entities\User\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.11"/>
     </ItemGroup>
 
 </Project>

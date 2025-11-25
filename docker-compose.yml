@@ -1,0 +1,29 @@
+﻿services:
+  db:
+    image: postgres:14.8
+    volumes:
+      - ".containers/db:/var/lib/postgresql/data"
+    ports:
+      - "${DB__PORT}:5432"
+    environment:
+      - POSTGRES_USER=${DB__USER}
+      - POSTGRES_PASSWORD=${DB__PASSWORD}
+      - POSTGRES_DB=${DB__NAME}
+    restart: always
+  api:
+    build: .
+    image: api
+    volumes:
+      - "./src/Templates:/app/src/Templates"
+      - "/var/log/help-mate-backend/api.json:/tmp/api.json"
+    depends_on:
+      - db
+    ports:
+      - "9090:8080"
+    env_file: ".env"
+    environment:
+      - APP_MODE=api
+      - TZ=America/Santo_Domingo
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://*:8080
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${DB__NAME};Username=${DB__USER};Password=${DB__PASSWORD}
