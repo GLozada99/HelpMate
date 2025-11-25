@@ -69,6 +69,7 @@ public class TicketService(
         var ticket = new Domain.Entities.Ticket.Ticket
         {
             BoardId = boardId,
+            Board = board,
             Title = dto.Title,
             Description = dto.Description ?? "",
             ReporterId = requesterId,
@@ -102,7 +103,7 @@ public class TicketService(
         var resultDto = new TicketDTO
         {
             Id = ticket.Id,
-            Code = ticket.Code(),
+            Code = $"{board.Code}-{ticket.Id}",
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -162,7 +163,7 @@ public class TicketService(
         var dto = new TicketDTO
         {
             Id = ticket.Id,
-            Code = ticket.Code(),
+            Code = $"{ticket.Board!.Code}-{ticket.Id}",
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -193,14 +194,13 @@ public class TicketService(
         var query = context.Tickets
             .AsNoTracking()
             .Where(t => t.BoardId == boardId)
-            .Include(t => t.Assignee)
             .OrderBy(t => t.Id)
             .Select(t => new TicketListDTO
             {
                 Id = t.Id,
                 Title = t.Title,
                 Description = t.Description,
-                Code = t.Code(),
+                Code = $"{t.Board!.Code}-{t.Id}",
                 Assignee = t.Assignee == null
                     ? null
                     : new TicketUserDTO
@@ -334,7 +334,7 @@ public class TicketService(
         var dtoResult = new TicketDTO
         {
             Id = ticket.Id,
-            Code = ticket.Code(),
+            Code = $"{board.Code}-{ticket.Id}",
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -428,7 +428,6 @@ public class TicketService(
         var query = context.TicketComments
             .AsNoTracking()
             .Where(c => c.TicketId == ticketId)
-            .Include(c => c.User)
             .OrderBy(c => c.Id)
             .Select(c => new TicketCommentDTO
             {

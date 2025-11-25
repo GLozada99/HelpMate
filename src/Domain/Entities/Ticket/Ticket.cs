@@ -32,9 +32,4 @@ public class Ticket : BaseEntity
     public List<Tag> Tags { get; } = [];
     public List<User.User> Watchers { get; } = [];
     public List<TicketHistory> History { get; } = [];
-
-    public string Code()
-    {
-        return $"{Board?.Code}-{Id}";
-    }
 }

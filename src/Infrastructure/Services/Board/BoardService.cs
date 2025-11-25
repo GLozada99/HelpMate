@@ -102,7 +102,6 @@ public class BoardService(
         var boards = context.BoardMemberships
             .AsNoTracking()
             .Where(m => m.UserId == requesterId)
-            .Include(m => m.Board)
             .Select(m => m.Board!)
             .OrderBy(m => m.Id)
             .AsQueryable();
