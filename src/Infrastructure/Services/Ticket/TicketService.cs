@@ -359,6 +359,7 @@ public class TicketService(
             .Include(t => t.Reporter)
             .Include(t => t.CreatedBy)
             .Include(t => t.Assignee)
+            .Include(t => t.Board)
             .FirstOrDefaultAsync(t =>
                 t.Id == ticketId &&
                 t.BoardId == boardId);
