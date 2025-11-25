@@ -3,6 +3,7 @@ using API.Interfaces.Response;
 using API.Services.Tracking;
 using Application.Interfaces.Auth;
 using Application.Interfaces.Board;
+using Application.Interfaces.Ticket;
 using Application.Interfaces.Tracking;
 using Application.Interfaces.User;
 using Domain.Entities.User;
@@ -10,6 +11,7 @@ using Domain.Enums;
 using Infrastructure.Context;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Board;
+using Infrastructure.Services.Ticket;
 using Infrastructure.Services.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +26,7 @@ public static class CommonConfigs
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IApiResponseHelper, ApiResponseHelper>();
         services.AddScoped<IBoardService, BoardService>();
+        services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();
         return services;

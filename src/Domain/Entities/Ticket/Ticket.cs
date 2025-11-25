@@ -1,31 +1,15 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using Domain.Enums;
 
 namespace Domain.Entities.Ticket;
 
 public class Ticket : BaseEntity
 {
-    public enum Priorities
-    {
-        Low,
-        Medium,
-        High,
-        Critical
-    }
-
-    public enum Statuses
-    {
-        Backlog,
-        Open,
-        InProgress,
-        Blocked,
-        Closed
-    }
-
     public required string Title { get; set; }
     public required string Description { get; set; }
     public DateTime? DueDate { get; set; }
-    public Statuses Status { get; set; } = Statuses.Backlog;
-    public Priorities Priority { get; set; } = Priorities.Low;
+    public TicketStatus Status { get; set; } = TicketStatus.Backlog;
+    public TicketPriority Priority { get; set; } = TicketPriority.Low;
 
     [ForeignKey("CreatedBy")] public int CreatedById { get; set; }
 
