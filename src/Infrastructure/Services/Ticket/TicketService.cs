@@ -194,6 +194,7 @@ public class TicketService(
             .AsNoTracking()
             .Where(t => t.BoardId == boardId)
             .Include(t => t.Assignee)
+            .OrderBy(t => t.Id)
             .Select(t => new TicketListDTO
             {
                 Id = t.Id,
@@ -428,6 +429,7 @@ public class TicketService(
             .AsNoTracking()
             .Where(c => c.TicketId == ticketId)
             .Include(c => c.User)
+            .OrderBy(c => c.Id)
             .Select(c => new TicketCommentDTO
             {
                 Id = c.Id,

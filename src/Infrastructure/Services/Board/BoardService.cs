@@ -104,6 +104,7 @@ public class BoardService(
             .Where(m => m.UserId == requesterId)
             .Include(m => m.Board)
             .Select(m => m.Board!)
+            .OrderBy(m => m.Id)
             .AsQueryable();
 
         if (!boards.Any())
@@ -420,6 +421,7 @@ public class BoardService(
         var memberships = context.BoardMemberships
             .AsNoTracking()
             .Where(m => m.BoardId == boardId)
+            .OrderBy(m => m.Id)
             .AsQueryable();
 
         if (memberships.All(m => m.UserId != requesterId))
