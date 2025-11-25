@@ -1,8 +1,10 @@
-using Application.DTOs.Tickets;
+using Application.DTOs.Ticket.Ticket;
+using Application.DTOs.Ticket.TicketComment;
 using Application.Errors;
 using Application.Helpers.Ticket;
 using Application.Interfaces.Ticket;
 using Domain.Entities.Board;
+using Domain.Entities.Ticket;
 using Domain.Enums;
 using FluentResults;
 using Infrastructure.Context;
@@ -67,6 +69,7 @@ public class TicketService(
         var ticket = new Domain.Entities.Ticket.Ticket
         {
             BoardId = boardId,
+            Board = board,
             Title = dto.Title,
             Description = dto.Description ?? "",
             ReporterId = requesterId,
@@ -100,7 +103,7 @@ public class TicketService(
         var resultDto = new TicketDTO
         {
             Id = ticket.Id,
-            Code = ticket.Code(),
+            Code = $"{board.Code}-{ticket.Id}",
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -160,7 +163,7 @@ public class TicketService(
         var dto = new TicketDTO
         {
             Id = ticket.Id,
-            Code = ticket.Code(),
+            Code = $"{ticket.Board!.Code}-{ticket.Id}",
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -191,13 +194,13 @@ public class TicketService(
         var query = context.Tickets
             .AsNoTracking()
             .Where(t => t.BoardId == boardId)
-            .Include(t => t.Assignee)
+            .OrderBy(t => t.Id)
             .Select(t => new TicketListDTO
             {
                 Id = t.Id,
                 Title = t.Title,
                 Description = t.Description,
-                Code = t.Code(),
+                Code = $"{t.Board!.Code}-{t.Id}",
                 Assignee = t.Assignee == null
                     ? null
                     : new TicketUserDTO
@@ -331,7 +334,7 @@ public class TicketService(
         var dtoResult = new TicketDTO
         {
             Id = ticket.Id,
-            Code = ticket.Code(),
+            Code = $"{board.Code}-{ticket.Id}",
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -351,6 +354,198 @@ public class TicketService(
         return Result.Ok(dtoResult);
     }
 
+    public async Task<Result<TicketCommentDTO>> AddComment(
+        int boardId,
+        int ticketId,
+        CreateTicketCommentDTO dto,
+        int requesterId)
+    {
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed)
+            return Result.Fail(membershipResult.Errors);
+
+        var membership = membershipResult.Value;
+
+        if (!membership.User!.IsActive)
+            return Result.Fail(new UserNotFoundError(requesterId));
+
+        if (membership.Board!.Status != BoardStatus.Active)
+            return Result.Fail(new BoardNotFoundError(boardId));
+
+        var ticketResult = await GetTicket(ticketId, boardId);
+        if (ticketResult.IsFailed)
+            return Result.Fail(ticketResult.Errors);
+
+        var ticket = ticketResult.Value;
+
+        var comment = new TicketComment
+        {
+            TicketId = ticket.Id,
+            UserId = requesterId,
+            Text = dto.Text
+        };
+
+        context.TicketComments.Add(comment);
+        var save = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (save.IsFailed)
+            return save.ToResult<TicketCommentDTO>();
+
+        var dtoResult = new TicketCommentDTO
+        {
+            Id = comment.Id,
+            TicketId = ticket.Id,
+            Text = comment.Text,
+            Edited = comment.Edited,
+            CreatedAt = comment.CreatedAt,
+            User = new TicketUserDTO
+            {
+                Id = membership.User.Id,
+                Email = membership.User.Email,
+                FullName = membership.User.FullName
+            }
+        };
+
+        return Result.Ok(dtoResult);
+    }
+
+    public async Task<Result<IQueryable<TicketCommentDTO>>> GetComments(
+        int boardId,
+        int ticketId,
+        int requesterId)
+    {
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed)
+            return Result.Fail<IQueryable<TicketCommentDTO>>(membershipResult.Errors);
+
+        var ticketResult = await GetTicket(ticketId, boardId);
+        if (ticketResult.IsFailed)
+            return Result.Fail<IQueryable<TicketCommentDTO>>(ticketResult.Errors);
+
+        var query = context.TicketComments
+            .AsNoTracking()
+            .Where(c => c.TicketId == ticketId)
+            .OrderBy(c => c.Id)
+            .Select(c => new TicketCommentDTO
+            {
+                Id = c.Id,
+                TicketId = c.TicketId,
+                Text = c.Text,
+                Edited = c.Edited,
+                CreatedAt = c.CreatedAt,
+                User = new TicketUserDTO
+                {
+                    Id = c.User!.Id,
+                    Email = c.User.Email,
+                    FullName = c.User.FullName
+                }
+            })
+            .AsQueryable();
+
+        logger.LogInformation(
+            "Retrieved {Count} comments for Ticket '{TicketId}' on Board '{BoardId}' by User '{RequesterId}'.",
+            query.Count(), ticketId, boardId, requesterId
+        );
+
+        return Result.Ok(query);
+    }
+
+
+    public async Task<Result<TicketCommentDTO>> UpdateComment(
+        int boardId,
+        int ticketId,
+        int commentId,
+        UpdateTicketCommentDTO dto,
+        int requesterId)
+    {
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed)
+            return Result.Fail(membershipResult.Errors);
+
+        var ticketResult = await GetTicket(ticketId, boardId);
+        if (ticketResult.IsFailed)
+            return Result.Fail(ticketResult.Errors);
+
+        var comment = await context.TicketComments
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == ticketId);
+
+        if (comment == null)
+            return Result.Fail(new TicketCommentNotFoundError(commentId));
+
+        var canEditResult =
+            TicketCommentRulesHelper.CanEdit(comment.UserId == requesterId);
+        if (canEditResult.IsFailed) return Result.Fail(canEditResult.Errors);
+
+        comment.Text = dto.Text;
+        comment.Edited = true;
+
+        var save = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (save.IsFailed)
+            return save.ToResult<TicketCommentDTO>();
+
+        var dtoResult = new TicketCommentDTO
+        {
+            Id = comment.Id,
+            TicketId = comment.TicketId,
+            Text = comment.Text,
+            Edited = comment.Edited,
+            CreatedAt = comment.CreatedAt,
+            User = new TicketUserDTO
+            {
+                Id = comment.User!.Id,
+                Email = comment.User.Email,
+                FullName = comment.User.FullName
+            }
+        };
+
+        return Result.Ok(dtoResult);
+    }
+
+    public async Task<Result> DeleteComment(
+        int boardId,
+        int ticketId,
+        int commentId,
+        int requesterId)
+    {
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed)
+            return Result.Fail(membershipResult.Errors);
+
+        var membership = membershipResult.Value;
+
+        var ticketResult = await GetTicket(ticketId, boardId);
+        if (ticketResult.IsFailed)
+            return Result.Fail(ticketResult.Errors);
+
+        var comment = await context.TicketComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TicketId == ticketId);
+
+        if (comment == null)
+            return Result.Fail(new TicketCommentNotFoundError(commentId));
+
+        var canDeleteResult =
+            TicketCommentRulesHelper.CanDelete(membership.Role,
+                comment.UserId == requesterId);
+        if (canDeleteResult.IsFailed) return Result.Fail(canDeleteResult.Errors);
+
+        context.TicketComments.Remove(comment);
+        var save = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        return save.IsFailed ? Result.Fail(save.Errors) : Result.Ok();
+    }
+
+
     private async Task<Result<Domain.Entities.Ticket.Ticket>> GetTicket(int ticketId,
         int boardId)
     {
@@ -359,6 +554,7 @@ public class TicketService(
             .Include(t => t.Reporter)
             .Include(t => t.CreatedBy)
             .Include(t => t.Assignee)
+            .Include(t => t.Board)
             .FirstOrDefaultAsync(t =>
                 t.Id == ticketId &&
                 t.BoardId == boardId);
@@ -393,7 +589,7 @@ public class TicketService(
         );
 
         return Result.Fail<BoardMembership>(
-            new InsufficientUserMembershipError(
+            new InsufficientUserMembershipPermissionsError(
                 "N/A",
                 $"Access Board {boardId}"
             )

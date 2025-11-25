@@ -1,7 +1,7 @@
 using API.Interfaces.Response;
 using Application.DTOs.Pagination;
 using Application.DTOs.Shared;
-using Application.DTOs.Tickets;
+using Application.DTOs.Ticket.Ticket;
 using Application.Errors;
 using Application.Helpers.Pagination;
 using Application.Interfaces.Ticket;
@@ -39,7 +39,7 @@ public class TicketController(
         {
             UserNotFoundError or BoardNotFoundError =>
                 ApiResponseHelper.Failure(errors, BadRequest),
-            InsufficientUserMembershipError =>
+            InsufficientUserMembershipPermissionsError =>
                 ApiResponseHelper.Failure(errors,
                     response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
@@ -64,7 +64,7 @@ public class TicketController(
             TicketNotFoundError =>
                 ApiResponseHelper.Failure(errors, NotFound),
 
-            InsufficientUserMembershipError =>
+            InsufficientUserMembershipPermissionsError =>
                 ApiResponseHelper.Failure(errors,
                     response => new ObjectResult(response) { StatusCode = 403 }),
 
@@ -117,7 +117,8 @@ public class TicketController(
             UserNotFoundError or BoardNotFoundError =>
                 ApiResponseHelper.Failure(errors, BadRequest),
 
-            InsufficientUserMembershipError or InsufficientUserPermissionsError =>
+            InsufficientUserMembershipPermissionsError
+                or InsufficientUserPermissionsError =>
                 ApiResponseHelper.Failure(
                     errors,
                     response => new ObjectResult(response) { StatusCode = 403 }),

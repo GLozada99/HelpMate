@@ -106,7 +106,7 @@ public class UserService(
 
     public Task<Result<IQueryable<UserDTO>>> GetUsers(GetUserQueryDTO dto)
     {
-        var dbQuery = context.Users.AsQueryable();
+        var dbQuery = context.Users.OrderBy(u => u.Id).AsQueryable();
 
         if (dto.Role.HasValue)
             dbQuery = dbQuery.Where(u => dto.Role.Value == u.Role);

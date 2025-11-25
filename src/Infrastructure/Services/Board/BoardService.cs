@@ -102,8 +102,8 @@ public class BoardService(
         var boards = context.BoardMemberships
             .AsNoTracking()
             .Where(m => m.UserId == requesterId)
-            .Include(m => m.Board)
             .Select(m => m.Board!)
+            .OrderBy(m => m.Id)
             .AsQueryable();
 
         if (!boards.Any())
@@ -420,6 +420,7 @@ public class BoardService(
         var memberships = context.BoardMemberships
             .AsNoTracking()
             .Where(m => m.BoardId == boardId)
+            .OrderBy(m => m.Id)
             .AsQueryable();
 
         if (memberships.All(m => m.UserId != requesterId))
@@ -430,8 +431,8 @@ public class BoardService(
             );
 
             return Result.Fail<IQueryable<BoardMembershipDTO>>(
-                new InsufficientUserMembershipError(
-                    "N/A",
+                new InsufficientUserMembershipPermissionsError(
+                    "no membership for this board",
                     $"View memberships for Board {boardId}"
                 )
             );
@@ -573,8 +574,8 @@ public class BoardService(
         );
 
         return Result.Fail<BoardMembership>(
-            new InsufficientUserMembershipError(
-                "N/A",
+            new InsufficientUserMembershipPermissionsError(
+                "no membership for this board",
                 $"Access Board {boardId}"
             )
         );

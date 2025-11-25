@@ -60,7 +60,8 @@ public class BoardController(
         return error switch
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipPermissionsError => ApiResponseHelper.Failure(
+                errors,
                 response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -100,7 +101,8 @@ public class BoardController(
         return error switch
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipPermissionsError => ApiResponseHelper.Failure(
+                errors,
                 response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -121,7 +123,8 @@ public class BoardController(
         return error switch
         {
             BoardNotFoundError => ApiResponseHelper.Failure(errors, NotFound),
-            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipPermissionsError => ApiResponseHelper.Failure(
+                errors,
                 response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };

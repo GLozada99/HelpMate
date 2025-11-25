@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Domain.Enums;
 
-namespace Application.DTOs.Tickets;
+namespace Application.DTOs.Ticket.Ticket;
 
 public record CreateTicketDTO
 {

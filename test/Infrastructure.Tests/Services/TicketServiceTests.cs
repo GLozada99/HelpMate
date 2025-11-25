@@ -1,8 +1,10 @@
 using Application.DTOs.Board.Board;
 using Application.DTOs.Board.BoardMembership;
-using Application.DTOs.Tickets;
+using Application.DTOs.Ticket.Ticket;
+using Application.DTOs.Ticket.TicketComment;
 using Application.Errors;
 using Domain.Entities.Board;
+using Domain.Entities.Ticket;
 using Domain.Entities.User;
 using Domain.Enums;
 using FluentAssertions;
@@ -123,7 +125,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -160,7 +163,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -197,7 +201,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -231,7 +236,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -300,7 +306,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -403,7 +410,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -558,7 +566,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -586,7 +595,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -657,7 +667,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -728,6 +739,311 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
+
+    [Fact]
+    public async Task GetComments_ShouldReturnComments_WhenUserIsMember()
+    {
+        // Arrange
+        var user = await CreateUser("cm1");
+        var boardResult = await _boardService.CreateBoard(new CreateBoardDTO
+        {
+            Code = "BCM1",
+            Name = "Board",
+            Description = "Desc"
+        }, user.Id);
+        boardResult.Errors.Should().BeEmpty();
+        var board = boardResult.Value;
+
+        var ticketResult = await _ticketService.CreateTicket(board.Id,
+            new CreateTicketDTO
+            {
+                Title = "T1"
+            }, user.Id);
+        ticketResult.Errors.Should().BeEmpty();
+        var ticket = ticketResult.Value;
+
+        var c1 = new TicketComment
+        {
+            Text = "Hello",
+            TicketId = ticket.Id,
+            UserId = user.Id
+        };
+        var c2 = new TicketComment
+        {
+            Text = "Second",
+            TicketId = ticket.Id,
+            UserId = user.Id
+        };
+        _db.TicketComments.AddRange(c1, c2);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var result = await _ticketService.GetComments(board.Id, ticket.Id, user.Id);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var list = result.Value.ToList();
+        list.Count.Should().Be(2);
+        list.Select(c => c.Text).Should().Contain(["Hello", "Second"]);
+    }
+
+    [Fact]
+    public async Task GetComments_ShouldFail_WhenUserNotMember()
+    {
+        // Arrange
+        var user = await CreateUser("c1");
+        var outsider = await CreateUser("c2");
+
+        var boardResult = await _boardService.CreateBoard(new CreateBoardDTO
+        {
+            Code = "B_CM2",
+            Name = "X",
+            Description = "Y"
+        }, user.Id);
+        boardResult.Errors.Should().BeEmpty();
+        var board = boardResult.Value;
+
+        var ticketResult = await _ticketService.CreateTicket(board.Id,
+            new CreateTicketDTO
+            {
+                Title = "Ticket"
+            }, user.Id);
+        ticketResult.Errors.Should().BeEmpty();
+        var ticket = ticketResult.Value;
+
+        // Act
+        var result = await _ticketService.GetComments(board.Id, ticket.Id, outsider.Id);
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
+    }
+
+    [Fact]
+    public async Task AddComment_ShouldSucceed_WhenUserIsMember()
+    {
+        // Arrange
+        var user = await CreateUser("ac1");
+
+        var boardResult = await _boardService.CreateBoard(new CreateBoardDTO
+        {
+            Code = "ACM1",
+            Name = "Board",
+            Description = "Desc"
+        }, user.Id);
+        boardResult.Errors.Should().BeEmpty();
+        var board = boardResult.Value;
+
+        var ticketResult = await _ticketService.CreateTicket(board.Id,
+            new CreateTicketDTO
+            {
+                Title = "T1"
+            }, user.Id);
+        ticketResult.Errors.Should().BeEmpty();
+        var ticket = ticketResult.Value;
+
+        var dto = new CreateTicketCommentDTO
+        {
+            Text = "Hello World"
+        };
+
+        // Act
+        var result = await _ticketService.AddComment(board.Id, ticket.Id, dto, user.Id);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        var comment = await _db.TicketComments.FirstAsync();
+        comment.Text.Should().Be("Hello World");
+        comment.UserId.Should().Be(user.Id);
+    }
+
+    [Fact]
+    public async Task AddComment_ShouldFail_WhenUserNotMember()
+    {
+        // Arrange
+        var user = await CreateUser("ac1");
+        var outsider = await CreateUser("ac2");
+
+        var boardResult = await _boardService.CreateBoard(new CreateBoardDTO
+        {
+            Code = "ACM1",
+            Name = "Board",
+            Description = "Desc"
+        }, user.Id);
+        boardResult.Errors.Should().BeEmpty();
+        var board = boardResult.Value;
+
+        var ticketResult = await _ticketService.CreateTicket(board.Id,
+            new CreateTicketDTO
+            {
+                Title = "T1"
+            }, user.Id);
+        ticketResult.Errors.Should().BeEmpty();
+        var ticket = ticketResult.Value;
+
+        var dto = new CreateTicketCommentDTO
+        {
+            Text = "Hello World"
+        };
+
+        // Act
+        var result =
+            await _ticketService.AddComment(board.Id, ticket.Id, dto, outsider.Id);
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
+    }
+
+    [Fact]
+    public async Task UpdateComment_ShouldSucceed_WhenUserIsAuthor()
+    {
+        // Arrange
+        var user = await CreateUser("uc1");
+
+        var boardResult = await _boardService.CreateBoard(new CreateBoardDTO
+        {
+            Code = "UC1",
+            Name = "Board",
+            Description = "Desc"
+        }, user.Id);
+        boardResult.Errors.Should().BeEmpty();
+        var board = boardResult.Value;
+
+        var ticketResult = await _ticketService.CreateTicket(board.Id,
+            new CreateTicketDTO
+            {
+                Title = "T1"
+            }, user.Id);
+        ticketResult.Errors.Should().BeEmpty();
+        var ticket = ticketResult.Value;
+
+        var comment = new TicketComment
+        {
+            TicketId = ticket.Id,
+            UserId = user.Id,
+            Text = "Old"
+        };
+        _db.TicketComments.Add(comment);
+        await _db.SaveChangesAsync();
+
+        var dto = new UpdateTicketCommentDTO { Text = "New Text" };
+
+        // Act
+        var result =
+            await _ticketService.UpdateComment(board.Id, ticket.Id, comment.Id, dto,
+                user.Id);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var updated = await _db.TicketComments.FindAsync(comment.Id);
+        updated!.Text.Should().Be("New Text");
+        updated.Edited.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateComment_ShouldFail_WhenUserIsNotAuthor()
+    {
+        // Arrange
+        var author = await CreateUser("auth");
+        var other = await CreateUser("oth");
+
+        var boardResult = await _boardService.CreateBoard(new CreateBoardDTO
+        {
+            Code = "UCW",
+            Name = "Board",
+            Description = "Desc"
+        }, author.Id);
+        boardResult.Errors.Should().BeEmpty();
+        var board = boardResult.Value;
+
+        _db.BoardMemberships.Add(new BoardMembership
+        {
+            BoardId = board.Id,
+            UserId = other.Id,
+            Role = MembershipRole.Agent
+        });
+        await _db.SaveChangesAsync();
+
+        var ticketResult = await _ticketService.CreateTicket(board.Id,
+            new CreateTicketDTO
+            {
+                Title = "T1"
+            }, author.Id);
+        ticketResult.Errors.Should().BeEmpty();
+        var ticket = ticketResult.Value;
+
+        var comment = new TicketComment
+        {
+            Text = "Original",
+            TicketId = ticket.Id,
+            UserId = author.Id
+        };
+        _db.TicketComments.Add(comment);
+        await _db.SaveChangesAsync();
+
+        var dto = new UpdateTicketCommentDTO { Text = "New Text" };
+
+        // Act
+        var result =
+            await _ticketService.UpdateComment(board.Id, ticket.Id, comment.Id, dto,
+                other.Id);
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
+    }
+
+    [Theory]
+    [InlineData(MembershipRole.Owner)]
+    [InlineData(MembershipRole.Editor)]
+    public async Task DeleteComment_ShouldSucceed_ForOwnerOrEditor(MembershipRole role)
+    {
+        // Arrange
+        var owner = await CreateUser("del1");
+
+        var boardResult = await _boardService.CreateBoard(new CreateBoardDTO
+        {
+            Code = "DELX",
+            Name = "Board",
+            Description = "Desc"
+        }, owner.Id);
+        boardResult.Errors.Should().BeEmpty();
+        var board = boardResult.Value;
+
+        var membership = await _db.BoardMemberships.FirstAsync();
+        membership.Role = role;
+        await _db.SaveChangesAsync();
+
+        var ticketResult = await _ticketService.CreateTicket(board.Id, new CreateTicketDTO
+        {
+            Title = "T1"
+        }, owner.Id);
+        ticketResult.Errors.Should().BeEmpty();
+        var ticket = ticketResult.Value;
+
+        var comment = new TicketComment
+        {
+            TicketId = ticket.Id,
+            UserId = owner.Id,
+            Text = "Remove me"
+        };
+        _db.TicketComments.Add(comment);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var result = await _ticketService.DeleteComment(board.Id, ticket.Id, comment.Id, owner.Id);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        (await _db.TicketComments.AnyAsync()).Should().BeFalse();
+    }
+
 }

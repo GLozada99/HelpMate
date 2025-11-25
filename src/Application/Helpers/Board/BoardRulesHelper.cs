@@ -22,8 +22,8 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserMembershipError(
-                requesterMembershipRole.ToString(),
+            : Result.Fail(new InsufficientUserMembershipPermissionsError(
+                $"{requesterMembershipRole} membership",
                 "Update Board"));
     }
 
@@ -31,8 +31,8 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserMembershipError(
-                requesterMembershipRole.ToString(),
+            : Result.Fail(new InsufficientUserMembershipPermissionsError(
+                $"{requesterMembershipRole} membership",
                 "Deactivate Board"));
     }
 
@@ -40,8 +40,8 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserMembershipError(
-                requesterMembershipRole.ToString(),
+            : Result.Fail(new InsufficientUserMembershipPermissionsError(
+                $"{requesterMembershipRole} membership",
                 "Create Board Membership"));
     }
 
@@ -49,8 +49,8 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserMembershipError(
-                requesterMembershipRole.ToString(),
+            : Result.Fail(new InsufficientUserMembershipPermissionsError(
+                $"{requesterMembershipRole} membership",
                 "Update Board Membership"));
     }
 
@@ -58,8 +58,8 @@ public static class BoardRulesHelper
     {
         return requesterMembershipRole == MembershipRole.Owner
             ? Result.Ok()
-            : Result.Fail(new InsufficientUserMembershipError(
-                requesterMembershipRole.ToString(),
+            : Result.Fail(new InsufficientUserMembershipPermissionsError(
+                $"{requesterMembershipRole} membership",
                 "Remove Board Membership"));
     }
 
