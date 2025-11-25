@@ -377,7 +377,9 @@ public class TicketService(
             .Include(m => m.Board)
             .Include(m => m.User)
             .FirstOrDefaultAsync(m =>
-                m.BoardId == boardId && m.UserId == userId && m.User!.IsActive);
+                m.BoardId == boardId && m.Board!.Status == BoardStatus.Active &&
+                m.UserId == userId &&
+                m.User!.Status == UserStatus.Active);
 
         if (membership != null) return Result.Ok(membership);
 
