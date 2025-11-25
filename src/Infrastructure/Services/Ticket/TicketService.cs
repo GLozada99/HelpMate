@@ -1,8 +1,10 @@
 using Application.DTOs.Ticket.Ticket;
+using Application.DTOs.Ticket.TicketComment;
 using Application.Errors;
 using Application.Helpers.Ticket;
 using Application.Interfaces.Ticket;
 using Domain.Entities.Board;
+using Domain.Entities.Ticket;
 using Domain.Enums;
 using FluentResults;
 using Infrastructure.Context;
@@ -347,6 +349,64 @@ public class TicketService(
             "Ticket '{TicketId}' updated on Board '{BoardId}' by User '{UserId}'.",
             ticketId, boardId, requesterId
         );
+
+        return Result.Ok(dtoResult);
+    }
+
+    public async Task<Result<TicketCommentDTO>> AddComment(
+        int boardId,
+        int ticketId,
+        CreateTicketCommentDTO dto,
+        int requesterId)
+    {
+        var membershipResult = await GetUserMembership(boardId, requesterId);
+        if (membershipResult.IsFailed)
+            return Result.Fail(membershipResult.Errors);
+
+        var membership = membershipResult.Value;
+
+        if (!membership.User!.IsActive)
+            return Result.Fail(new UserNotFoundError(requesterId));
+
+        if (membership.Board!.Status != BoardStatus.Active)
+            return Result.Fail(new BoardNotFoundError(boardId));
+
+        var ticketResult = await GetTicket(ticketId, boardId);
+        if (ticketResult.IsFailed)
+            return Result.Fail(ticketResult.Errors);
+
+        var ticket = ticketResult.Value;
+
+        var comment = new TicketComment
+        {
+            TicketId = ticket.Id,
+            UserId = requesterId,
+            Text = dto.Text
+        };
+
+        context.TicketComments.Add(comment);
+        var save = await context.SaveChangesResultAsync(
+            logger,
+            () => new BaseError()
+        );
+
+        if (save.IsFailed)
+            return save.ToResult<TicketCommentDTO>();
+
+        var dtoResult = new TicketCommentDTO
+        {
+            Id = comment.Id,
+            TicketId = ticket.Id,
+            Text = comment.Text,
+            Edited = comment.Edited,
+            CreatedAt = comment.CreatedAt,
+            User = new TicketUserDTO
+            {
+                Id = membership.User.Id,
+                Email = membership.User.Email,
+                FullName = membership.User.FullName
+            }
+        };
 
         return Result.Ok(dtoResult);
     }
