@@ -100,6 +100,7 @@ public class TicketService(
         var resultDto = new TicketDTO
         {
             Id = ticket.Id,
+            Code = ticket.Code(),
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -159,6 +160,7 @@ public class TicketService(
         var dto = new TicketDTO
         {
             Id = ticket.Id,
+            Code = ticket.Code(),
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
@@ -265,6 +267,7 @@ public class TicketService(
             if (canBeReporter.IsFailed)
                 return Result.Fail<TicketDTO>(canBeReporter.Errors);
             ticket.ReporterId = dto.ReporterId.Value;
+            ticket.Reporter = reporterMembershipResult.Value.User;
         }
 
         TicketUserDTO? assigneeDto = null;
@@ -328,6 +331,7 @@ public class TicketService(
         var dtoResult = new TicketDTO
         {
             Id = ticket.Id,
+            Code = ticket.Code(),
             BoardId = ticket.BoardId,
             Title = ticket.Title,
             Description = ticket.Description,
