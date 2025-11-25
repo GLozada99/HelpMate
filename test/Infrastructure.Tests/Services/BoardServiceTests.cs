@@ -245,7 +245,8 @@ public class BoardServiceTests
         var result = await service.GetBoard(board.Id, requester.Id);
 
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -337,7 +338,8 @@ public class BoardServiceTests
         var result = await service.UpdateBoard(board.Id, dto, member.Id);
 
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -548,7 +550,8 @@ public class BoardServiceTests
             dto,
             target.Id);
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
 

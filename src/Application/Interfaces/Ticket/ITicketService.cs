@@ -19,6 +19,11 @@ public interface ITicketService
     Task<Result<TicketCommentDTO>> AddComment(
         int boardId, int ticketId, CreateTicketCommentDTO dto, int requesterId);
 
+    Task<Result<IQueryable<TicketCommentDTO>>> GetComments(
+        int boardId,
+        int ticketId,
+        int requesterId);
+
     Task<Result<TicketCommentDTO>> UpdateComment(
         int boardId, int ticketId, int commentId, UpdateTicketCommentDTO dto,
         int requesterId);

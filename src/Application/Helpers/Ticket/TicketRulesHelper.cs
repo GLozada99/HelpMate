@@ -10,7 +10,8 @@ public static class TicketRulesHelper
     {
         return role == MembershipRole.Viewer
             ? Result.Fail(
-                new InsufficientUserMembershipError(role.ToString(), "Create Ticket"))
+                new InsufficientUserMembershipPermissionsError($"{role} membership",
+                    "Create Ticket"))
             : Result.Ok();
     }
 
@@ -18,7 +19,8 @@ public static class TicketRulesHelper
     {
         return role == MembershipRole.Viewer
             ? Result.Fail(
-                new InsufficientUserMembershipError(role.ToString(), "Edit Ticket"))
+                new InsufficientUserMembershipPermissionsError($"{role} membership",
+                    "Edit Ticket"))
             : Result.Ok();
     }
 
@@ -26,7 +28,8 @@ public static class TicketRulesHelper
     {
         return role == MembershipRole.Viewer
             ? Result.Fail(
-                new InsufficientUserMembershipError(role.ToString(), "Be Reporter"))
+                new InsufficientUserMembershipPermissionsError($"{role} membership",
+                    "Be Reporter"))
             : Result.Ok();
     }
 
@@ -37,7 +40,8 @@ public static class TicketRulesHelper
             MembershipRole.Agent => Result.Ok(),
             MembershipRole.Owner => Result.Ok(),
             _ => Result.Fail(
-                new InsufficientUserMembershipError(role.ToString(), "Be Assigned"))
+                new InsufficientUserMembershipPermissionsError($"{role} membership",
+                    "Be Assigned"))
         };
     }
 
@@ -45,7 +49,8 @@ public static class TicketRulesHelper
     {
         return role == MembershipRole.Viewer
             ? Result.Fail(
-                new InsufficientUserMembershipError(role.ToString(), "Assign Users"))
+                new InsufficientUserMembershipPermissionsError($"{role} membership",
+                    "Assign Users"))
             : Result.Ok();
     }
 }

@@ -15,7 +15,8 @@ public static class TicketCommentRulesHelper
             MembershipRole.Owner => Result.Ok(),
             MembershipRole.Editor => Result.Ok(),
             _ => Result.Fail(
-                new InsufficientUserMembershipError(role.ToString(), "Delete Comment"))
+                new InsufficientUserMembershipPermissionsError($"{role} membership",
+                    "Delete Comment"))
         };
     }
 
@@ -24,6 +25,8 @@ public static class TicketCommentRulesHelper
         return isAuthor
             ? Result.Ok()
             : Result.Fail(
-                new InsufficientUserMembershipError("NotAuthor", "Edit Comment"));
+                new InsufficientUserMembershipPermissionsError(
+                    "not the comment's author",
+                    "Edit Comment"));
     }
 }

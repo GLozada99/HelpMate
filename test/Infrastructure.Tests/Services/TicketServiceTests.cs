@@ -123,7 +123,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -160,7 +161,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -197,7 +199,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -231,7 +234,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -300,7 +304,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -403,7 +408,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -558,7 +564,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -586,7 +593,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -657,7 +665,8 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 
     [Fact]
@@ -728,6 +737,7 @@ public class TicketServiceTests
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<InsufficientUserMembershipError>();
+        result.Errors[0].Should()
+            .BeOfType<InsufficientUserMembershipPermissionsError>();
     }
 }

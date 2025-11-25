@@ -43,7 +43,8 @@ public class BoardMembershipController(
                 BadRequest),
             BoardMembershipAlreadyExistsError => ApiResponseHelper.Failure(errors,
                 Conflict),
-            InsufficientUserMembershipError => ApiResponseHelper.Failure(errors,
+            InsufficientUserMembershipPermissionsError => ApiResponseHelper.Failure(
+                errors,
                 response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
         };
@@ -90,7 +91,8 @@ public class BoardMembershipController(
                 BadRequest),
             BoardMembershipNotFoundError => ApiResponseHelper
                 .Failure(errors, NotFound),
-            InsufficientUserMembershipError or InsufficientUserPermissionsError =>
+            InsufficientUserMembershipPermissionsError
+                or InsufficientUserPermissionsError =>
                 ApiResponseHelper.Failure(errors,
                     response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)
@@ -117,7 +119,8 @@ public class BoardMembershipController(
                 BadRequest),
             BoardMembershipNotFoundError => ApiResponseHelper
                 .Failure(errors, NotFound),
-            InsufficientUserMembershipError or InsufficientUserPermissionsError =>
+            InsufficientUserMembershipPermissionsError
+                or InsufficientUserPermissionsError =>
                 ApiResponseHelper.Failure(errors,
                     response => new ObjectResult(response) { StatusCode = 403 }),
             _ => ApiResponseHelper.Failure(errors, BadRequest)

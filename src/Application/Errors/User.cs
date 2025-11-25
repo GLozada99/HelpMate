@@ -12,6 +12,6 @@ public class InsufficientUserPermissionsError(string role, string action)
     : Error(
         $"User with role '{role}' does not have the necessary permissions for this action: {action}.");
 
-public class InsufficientUserMembershipError(string membershipRole, string action)
+public class InsufficientUserMembershipPermissionsError(string context, string action)
     : Error(
-        $"User with membership '{membershipRole}' does not have the necessary permissions for this action: {action}.");
+        $"User with '{context}' does not have the necessary permissions for this action: {action}.");

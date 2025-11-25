@@ -430,8 +430,8 @@ public class BoardService(
             );
 
             return Result.Fail<IQueryable<BoardMembershipDTO>>(
-                new InsufficientUserMembershipError(
-                    "N/A",
+                new InsufficientUserMembershipPermissionsError(
+                    "no membership for this board",
                     $"View memberships for Board {boardId}"
                 )
             );
@@ -573,8 +573,8 @@ public class BoardService(
         );
 
         return Result.Fail<BoardMembership>(
-            new InsufficientUserMembershipError(
-                "N/A",
+            new InsufficientUserMembershipPermissionsError(
+                "no membership for this board",
                 $"Access Board {boardId}"
             )
         );
